@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/game">
+        <file>background.png</file>
+        <file>bullet.png</file>
+        <file>spaceship.png</file>
+        <file>enemy.png</file>
+    </qresource>
+</RCC>
