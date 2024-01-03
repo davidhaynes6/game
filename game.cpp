@@ -26,6 +26,7 @@ GameWidget::GameWidget(QWidget* parent) : QOpenGLWidget(parent)
     spaceshipDirection = Direction::Right;
     spaceshipAspectRatio = 0.0f;
     backgroundScrollSpeed = 0.0f;
+    moveSpeedX = moveSpeedY = 0.0f;
 
     // Create a timer for updating the game at approximately 60fps
     QTimer* timer = new QTimer(this);
@@ -40,133 +41,32 @@ GameWidget::~GameWidget() {
     delete enemyTexture;
 }
 
-// Initializes OpenGL settings.
-// Enables 2D texturing.
-// Sets the clear color(background color of the window).
-// Loads and configures textures for the spaceship and background.
-void GameWidget::initializeGL() {
-    initializeOpenGLFunctions();
-    glEnable(GL_TEXTURE_2D);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    // Load the Spacecraft Texture
-    QImage spaceshipImage(":/game/spaceship.png");
-    if (spaceshipImage.isNull()) {
-        qDebug() << "Failed to load spacecraft image";
-    }
-
-    spaceshipAspectRatio = static_cast<float>(spaceshipImage.width()) / static_cast<float>(spaceshipImage.height());
-    spaceshipTexture = new QOpenGLTexture(spaceshipImage.mirrored(false, true));
-    spaceshipTexture->setMinificationFilter(QOpenGLTexture::Nearest);
-    spaceshipTexture->setMagnificationFilter(QOpenGLTexture::Linear);
-    spaceshipTexture->setWrapMode(QOpenGLTexture::Repeat);
-
-    // Load the Background Texture
-    QImage backgroundImage(":/game/background.png");
-    if (backgroundImage.isNull()) {
-        qDebug() << "Failed to load background image";
-    }
-
-    backgroundTexture = new QOpenGLTexture(backgroundImage.mirrored());
-    backgroundTexture->setWrapMode(QOpenGLTexture::Repeat);
-    backgroundTexture->setMinificationFilter(QOpenGLTexture::Nearest);
-    backgroundTexture->setMagnificationFilter(QOpenGLTexture::Linear);
-    backgroundTexture->setWrapMode(QOpenGLTexture::Repeat);
-
-    // Load the Bullet Texture
-    QImage bulletImage(":/game/bullet.png");
-    if (bulletImage.isNull()) {
-        qDebug() << "Failed to load bullet image";
-    }
-
-    bulletTexture = new QOpenGLTexture(bulletImage.mirrored());
-    bulletTexture->setMinificationFilter(QOpenGLTexture::Nearest);
-    bulletTexture->setMagnificationFilter(QOpenGLTexture::Linear);
-    bulletTexture->setWrapMode(QOpenGLTexture::Repeat);
-
-    // Load the Enemy Texture
-    QImage enemyImage(":/game/enemy.png");
-    if (enemyImage.isNull()) {
-        qDebug() << "Failed to load enemy image";
-    }
-    enemyAspectRatio = static_cast<float>(enemyImage.width()) / static_cast<float>(enemyImage.height());
-    enemyTexture = new QOpenGLTexture(enemyImage.mirrored());
-    enemyTexture->setMinificationFilter(QOpenGLTexture::Nearest);
-    enemyTexture->setMagnificationFilter(QOpenGLTexture::Linear);
-    enemyTexture->setWrapMode(QOpenGLTexture::Repeat);
-}
-
-// Sets the viewport dimensions whenever the widget is resized.
-void GameWidget::resizeGL(int w, int h) {
-    glViewport(0, 0, w, h);
-}
-
-// Handles the rendering of each frame.
-// Clears the screen.
-// Renders a scrolling background.
-// Renders the spaceship with a fixed aspect ratio and position.
-void GameWidget::paintGL() {
-    // Clear the screen to the clear color
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    qDebug() << "In paintGL - backgroundX:" << backgroundX << "backgroundY:" << backgroundY;
-
-    // Draw Background
+void GameWidget::drawBackground() {
     backgroundTexture->bind();
 
-    glBegin(GL_QUADS); // Begin defining a quadrilateral
-    glTexCoord2f(backgroundX, backgroundY); glVertex2f(-1.0f, -1.0f);
-    glTexCoord2f(backgroundX + 1.0f, backgroundY); glVertex2f(1.0f, -1.0f);
-    glTexCoord2f(backgroundX + 1.0f, backgroundY + 1.0f); glVertex2f(1.0f, 1.0f);
-    glTexCoord2f(backgroundX, backgroundY + 1.0f); glVertex2f(-1.0f, 1.0f);
-    glEnd();// End the definition and render the textured quadrilateral
-   
+    // Adjust these factors to control the speed of scrolling and the scale of the background
+    const float SCROLL_FACTOR_X = 0.005f;
+    const float SCROLL_FACTOR_Y = 0.005f;
+    const float BACKGROUND_SCALE_X = 2.0f; // Adjust as needed for your texture
+    const float BACKGROUND_SCALE_Y = 2.0f; // Adjust as needed for your texture
+
+    // Calculate texture offset for repeating background
+    float backgroundOffsetX = cameraX * SCROLL_FACTOR_X;
+    float backgroundOffsetY = cameraY * SCROLL_FACTOR_Y;
+
+    // Repeat the texture
+    glBegin(GL_QUADS);
+    glTexCoord2f(backgroundOffsetX, backgroundOffsetY); glVertex2f(-BACKGROUND_SCALE_X, -BACKGROUND_SCALE_Y);
+    glTexCoord2f(backgroundOffsetX + BACKGROUND_SCALE_X, backgroundOffsetY); glVertex2f(BACKGROUND_SCALE_X, -BACKGROUND_SCALE_Y);
+    glTexCoord2f(backgroundOffsetX + BACKGROUND_SCALE_X, backgroundOffsetY + BACKGROUND_SCALE_Y); glVertex2f(BACKGROUND_SCALE_X, BACKGROUND_SCALE_Y);
+    glTexCoord2f(backgroundOffsetX, backgroundOffsetY + BACKGROUND_SCALE_Y); glVertex2f(-BACKGROUND_SCALE_X, BACKGROUND_SCALE_Y);
+    glEnd();
+
     backgroundTexture->release();
+}
 
-    // Draw spaceship
-    spaceshipTexture->bind();
-    float spaceshipWidth = SPACESHIP_SIZE; 
-    float spaceshipHeight = spaceshipWidth / spaceshipAspectRatio;
 
-    glPushMatrix();
-    glTranslatef(spaceshipX, spaceshipY, 0.0f);
-    if (spaceshipDirection == Right) {
-        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); // Rotate 180 degrees to face right
-    } 
-
-    glBegin(GL_QUADS); // Begin defining a quadrilateral
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(-spaceshipWidth / 2, -spaceshipHeight / 2);    // Bottom-left corner
-    glTexCoord2f(1.0f, 0.0f); glVertex2f(spaceshipWidth / 2, -spaceshipHeight / 2);     // Bottom-right corner
-    glTexCoord2f(1.0f, 1.0f); glVertex2f(spaceshipWidth / 2, spaceshipHeight / 2);      // Top-right corner
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(-spaceshipWidth / 2, spaceshipHeight / 2);     // Top-left corner
-    glEnd(); // End the definition and render the textured quadrilateral
-
-    glPopMatrix();
-
-    spaceshipTexture->release();
-
-    // Render bullets
-    bulletTexture->bind();
-    for (const auto& bullet : bullets) {
-        // Save current transformation state
-        glPushMatrix();
-
-        glTranslatef(bullet.x, bullet.y, 0.0f);
-        float bulletWidth = BULLET_SIZE; 
-        float bulletHeight = bulletWidth; // Adjust based on the texture aspect ratio
-
-        glBegin(GL_QUADS); // Begin defining a quadrilateral
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(-bulletWidth / 2, -bulletHeight / 2);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(bulletWidth / 2, -bulletHeight / 2);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(bulletWidth / 2, bulletHeight / 2);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(-bulletWidth / 2, bulletHeight / 2);
-        glEnd(); // End the definition and render the textured quadrilateral
-
-        // Remove the top matrix from the current matrix stack
-        glPopMatrix();
-    }
-    bulletTexture->release();
-
+void GameWidget::drawEnemies() {
     // Render enemy spaceships
     enemyTexture->bind();
     float enemyshipWidth = SPACESHIP_SIZE;
@@ -185,27 +85,162 @@ void GameWidget::paintGL() {
     enemyTexture->release();
 }
 
+void GameWidget::drawPlayerSpaceship() {
+    // Draw spaceship
+    spaceshipTexture->bind();
+    float spaceshipWidth = SPACESHIP_SIZE;
+    float spaceshipHeight = spaceshipWidth / spaceshipAspectRatio;
+
+    glPushMatrix();
+    glTranslatef(spaceshipX, spaceshipY, 0.0f);
+    if (spaceshipDirection == Right) {
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); // Rotate 180 degrees to face right
+    }
+
+    glBegin(GL_QUADS); // Begin defining a quadrilateral
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(-spaceshipWidth / 2, -spaceshipHeight / 2);    // Bottom-left corner
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(spaceshipWidth / 2, -spaceshipHeight / 2);     // Bottom-right corner
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(spaceshipWidth / 2, spaceshipHeight / 2);      // Top-right corner
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(-spaceshipWidth / 2, spaceshipHeight / 2);     // Top-left corner
+    glEnd(); // End the definition and render the textured quadrilateral
+
+    glPopMatrix();
+
+    spaceshipTexture->release();
+}
+
+void GameWidget::drawBullets() {
+    // Render bullets
+    bulletTexture->bind();
+    for (const auto& bullet : bullets) {
+        // Save current transformation state
+        glPushMatrix();
+
+        glTranslatef(bullet.x, bullet.y, 0.0f);
+        float bulletWidth = BULLET_SIZE;
+        float bulletHeight = bulletWidth; // Adjust based on the texture aspect ratio
+
+        glBegin(GL_QUADS); // Begin defining a quadrilateral
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(-bulletWidth / 2, -bulletHeight / 2);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(bulletWidth / 2, -bulletHeight / 2);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(bulletWidth / 2, bulletHeight / 2);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(-bulletWidth / 2, bulletHeight / 2);
+        glEnd(); // End the definition and render the textured quadrilateral
+
+        // Remove the top matrix from the current matrix stack
+        glPopMatrix();
+    }
+    bulletTexture->release();
+}
+
+// Initializes OpenGL settings.
+// Enables 2D texturing.
+// Sets the clear color(background color of the window).
+// Loads and configures textures for the game objects
+void GameWidget::initializeGL() {
+    initializeOpenGLFunctions();
+    glEnable(GL_TEXTURE_2D);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Load Textures
+    // Enemy
+    QImage enemyImage(":/game/enemy.png");
+    if (enemyImage.isNull()) {
+        qDebug() << "Failed to load enemy image";
+    }
+    enemyAspectRatio = static_cast<float>(enemyImage.width()) / static_cast<float>(enemyImage.height());
+    enemyTexture = new QOpenGLTexture(enemyImage.mirrored());
+    enemyTexture->setMinificationFilter(QOpenGLTexture::Nearest);
+    enemyTexture->setMagnificationFilter(QOpenGLTexture::Linear);
+    enemyTexture->setWrapMode(QOpenGLTexture::Repeat);
+
+    // Load the Background Texture
+    QImage backgroundImage(":/game/background.png");
+    if (backgroundImage.isNull()) {
+        qDebug() << "Failed to load background image";
+    }
+    // set width and height
+    BACKGROUND_TEXTURE_WIDTH = backgroundImage.width();
+    BACKGROUND_TEXTURE_HEIGHT = backgroundImage.height();
+
+    backgroundTexture = new QOpenGLTexture(backgroundImage.mirrored());
+    backgroundTexture->setWrapMode(QOpenGLTexture::Repeat);
+    backgroundTexture->setMinificationFilter(QOpenGLTexture::Nearest);
+    backgroundTexture->setMagnificationFilter(QOpenGLTexture::Linear);
+    backgroundTexture->setWrapMode(QOpenGLTexture::Repeat);
+
+    // Spacecraft
+    QImage spaceshipImage(":/game/spaceship.png");
+    if (spaceshipImage.isNull()) {
+        qDebug() << "Failed to load spacecraft image";
+    }
+    spaceshipAspectRatio = static_cast<float>(spaceshipImage.width()) / static_cast<float>(spaceshipImage.height());
+    spaceshipTexture = new QOpenGLTexture(spaceshipImage.mirrored(false, true));
+    spaceshipTexture->setMinificationFilter(QOpenGLTexture::Nearest);
+    spaceshipTexture->setMagnificationFilter(QOpenGLTexture::Linear);
+    spaceshipTexture->setWrapMode(QOpenGLTexture::Repeat);
+
+    // Bullet 
+    QImage bulletImage(":/game/bullet.png");
+    if (bulletImage.isNull()) {
+        qDebug() << "Failed to load bullet image";
+    }
+    bulletTexture = new QOpenGLTexture(bulletImage.mirrored());
+    bulletTexture->setMinificationFilter(QOpenGLTexture::Nearest);
+    bulletTexture->setMagnificationFilter(QOpenGLTexture::Linear);
+    bulletTexture->setWrapMode(QOpenGLTexture::Repeat);
+}
+
+// Sets the viewport dimensions whenever the widget is resized.
+void GameWidget::resizeGL(int w, int h) {
+    glViewport(0, 0, w, h);
+}
+
+// Handles the rendering of each frame.
+// Clears the screen.
+// Renders a scrolling background.
+// Renders the spaceship with a fixed aspect ratio and position.
+void GameWidget::paintGL() {
+    // Clear the screen to the clear color
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Apply camera transformation
+    glPushMatrix();
+    glTranslatef(cameraX, cameraY, 0.0f);
+
+    // Draw the background, enemies, etc., relative to the camera
+    drawBackground();
+    drawEnemies();
+
+    glPopMatrix();
+
+    // Player Spaceship is always at the center
+    drawPlayerSpaceship();
+    drawBullets();
+}
+
 void GameWidget::keyPressEvent(QKeyEvent* event) {
     float backgroundScrollSpeed = 0.01f; 
     qDebug() << "Key pressed: " << event->key();
 
     switch (event->key()) {
     case Qt::Key_Up:
-        backgroundMomentumY = backgroundScrollSpeed;
+        moveSpeedY = ACCELERATION;
         scroll = true;
         break;
     case Qt::Key_Down:
-        backgroundMomentumY = -backgroundScrollSpeed;
+        moveSpeedY = -ACCELERATION;
         scroll = true;
         break;
     case Qt::Key_Left:
         spaceshipDirection = Direction::Left;
-        backgroundMomentumX = -backgroundScrollSpeed;
+        moveSpeedX = -ACCELERATION;
         scroll = true;
         break;
     case Qt::Key_Right:
         spaceshipDirection = Direction::Right;
-        backgroundMomentumX = backgroundScrollSpeed;
+        moveSpeedX = ACCELERATION;
         scroll = true;
         break;
     case Qt::Key_Space:
@@ -237,43 +272,32 @@ void GameWidget::keyReleaseEvent(QKeyEvent* event) {
     switch (event->key()) {
     case Qt::Key_Left:
     case Qt::Key_Right:
+        moveSpeedX = 0.0f;
+        break;
     case Qt::Key_Up:
     case Qt::Key_Down:
-        scroll = false;
-        break;
-    default:
+        moveSpeedY = 0.0f;
         break;
     }
+    scroll = false;
 }
 
 void GameWidget::updateGame() {
     float screenBoundary = 1.0f; // Boundary for wrapping
 
     if (scroll) {
-        // Update the background's position based on the current direction
-        backgroundX += backgroundMomentumX;
-        backgroundY += backgroundMomentumY;
+        spaceshipX += moveSpeedX;
+        spaceshipY += moveSpeedY;
     }
     else {
-        // Apply momentum effect for gradual slowdown
-        backgroundMomentumX *= MOMENTUM_DECREASE_FACTOR;
-        backgroundMomentumY *= MOMENTUM_DECREASE_FACTOR;
-
-        backgroundX += backgroundMomentumX;
-        backgroundY += backgroundMomentumY;
+        moveSpeedX *= FRICTION;
+        moveSpeedY *= FRICTION;
+        spaceshipX += moveSpeedX;
+        spaceshipY += moveSpeedY;
     }
 
-    // Reset momentum when it's very low to stop the background
-    if (fabs(backgroundMomentumX) < 0.001f) backgroundMomentumX = 0.0f;
-    if (fabs(backgroundMomentumY) < 0.001f) backgroundMomentumY = 0.0f;
-
-    // Boundary checks for the spaceship
-    if (spaceshipX > WORLD_WIDTH / 2) spaceshipX = -WORLD_WIDTH / 2;
-    if (spaceshipX < -WORLD_WIDTH / 2) spaceshipX = WORLD_WIDTH / 2;
-
-    // Boundary checks for Y coordinates
-    if (spaceshipY > WORLD_HEIGHT / 2) spaceshipY = -WORLD_HEIGHT / 2;
-    if (spaceshipY < -WORLD_HEIGHT / 2) spaceshipY = WORLD_HEIGHT / 2;
+    cameraX = -spaceshipX;
+    cameraY = -spaceshipY;
 
     // Update enemy spaceships by passing player's spaceship position
     enemyManager.update();

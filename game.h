@@ -6,6 +6,7 @@
 #include <QOpenGLTexture>
 #include <QKeyEvent>
 #include "ui_game.h"
+#include "constants.h"
 #include "enemy.h"
 
 struct Bullet {
@@ -42,22 +43,31 @@ protected:
     void updateGame();
 
 private:
-    const float SPACESHIP_SIZE = 0.1f;
-    const float BULLET_SIZE = 0.025f;
     QOpenGLTexture* spaceshipTexture = nullptr;
     QOpenGLTexture* backgroundTexture = nullptr;
     QOpenGLTexture* bulletTexture = nullptr;
     QOpenGLTexture* enemyTexture = nullptr;
+    float cameraX, cameraY; // Camera position
+    Direction spaceshipDirection;
     float backgroundScrollSpeed = 0.0f;
     float backgroundMomentumX = 0.0f;
     float backgroundMomentumY = 0.0f;
-    const float MOMENTUM_DECREASE = 0.995f;
-    enum Direction { Left, Right, Up, Down} spaceshipDirection;
     float spaceshipX = 0.0f, spaceshipY = 0.0f;
     float backgroundX = 0.0f, backgroundY = 0.0f;
     float spaceshipAspectRatio = 0.0f;
     float enemyAspectRatio = 0.0f;
+
     std::vector<Bullet> bullets;
     EnemyManager enemyManager;
     bool scroll = false;
+    float moveSpeedX, moveSpeedY = 0.0f;
+
+    void drawBackground();
+    void drawEnemies();
+    void drawPlayerSpaceship();
+    void drawBullets();
+
+    // TODO FIX:
+    int BACKGROUND_TEXTURE_WIDTH;
+    int BACKGROUND_TEXTURE_HEIGHT;
 };

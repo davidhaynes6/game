@@ -3,8 +3,12 @@
 // Constants for world size
 const float WORLD_WIDTH = 2.0f;
 const float WORLD_HEIGHT = 2.0f;
-const float MOMENTUM_DECREASE_FACTOR = 0.95f; // Adjust as needed
+const float MOMENTUM_DECREASE_FACTOR = 0.95f; 
+const float ACCELERATION = 0.01f; 
+const float FRICTION = 0.98f; 
 
+const float SPACESHIP_SIZE = 0.1f;
+const float BULLET_SIZE = 0.025f;
 const float GAME_LEFT_BOUNDARY = -1.0f;
 const float GAME_RIGHT_BOUNDARY = 1.0f;
 const float GAME_TOP_BOUNDARY = 1.0f;
@@ -23,6 +27,12 @@ const float BULLET_WIDTH = 10.0f;
 const float BULLET_HEIGHT = 5.0f;
 const float ENEMY_WIDTH = 30.0f;
 const float ENEMY_HEIGHT = 20.0f;
+
+
+const float MOMENTUM_DECREASE = 0.995f;
+enum Direction { Left, Right, Up, Down };
+
+
 struct Rect {
     float x, y; // Position top-left corner
     float width, height; // Dimensions
