@@ -1,4 +1,5 @@
 #include "game.h"
+#include "constants.h"
 #include <QTimer>
 
 game::game(QWidget *parent) : QMainWindow(parent)
@@ -190,16 +191,22 @@ void GameWidget::keyPressEvent(QKeyEvent* event) {
 
     switch (event->key()) {
     case Qt::Key_Up:
-        spaceshipDirection = Direction::Up;
+        backgroundMomentumY = backgroundScrollSpeed;
+        scroll = true;
         break;
     case Qt::Key_Down:
-        spaceshipDirection = Direction::Down;
+        backgroundMomentumY = -backgroundScrollSpeed;
+        scroll = true;
         break;
     case Qt::Key_Left:
         spaceshipDirection = Direction::Left;
+        backgroundMomentumX = -backgroundScrollSpeed;
+        scroll = true;
         break;
     case Qt::Key_Right:
         spaceshipDirection = Direction::Right;
+        backgroundMomentumX = backgroundScrollSpeed;
+        scroll = true;
         break;
     case Qt::Key_Space:
         Bullet newBullet;
@@ -226,21 +233,47 @@ void GameWidget::keyPressEvent(QKeyEvent* event) {
     updateGame();
 }
 
+void GameWidget::keyReleaseEvent(QKeyEvent* event) {
+    switch (event->key()) {
+    case Qt::Key_Left:
+    case Qt::Key_Right:
+    case Qt::Key_Up:
+    case Qt::Key_Down:
+        scroll = false;
+        break;
+    default:
+        break;
+    }
+}
+
 void GameWidget::updateGame() {
     float screenBoundary = 1.0f; // Boundary for wrapping
 
-    // Update the background's position based on the spaceship's direction
-    float backgroundScrollSpeed = 0.01f;
-    if (spaceshipDirection == Direction::Left) {
-        backgroundX -= backgroundScrollSpeed;
+    if (scroll) {
+        // Update the background's position based on the current direction
+        backgroundX += backgroundMomentumX;
+        backgroundY += backgroundMomentumY;
     }
-    else if (spaceshipDirection == Direction::Right) {
-        backgroundX += backgroundScrollSpeed;
+    else {
+        // Apply momentum effect for gradual slowdown
+        backgroundMomentumX *= MOMENTUM_DECREASE_FACTOR;
+        backgroundMomentumY *= MOMENTUM_DECREASE_FACTOR;
+
+        backgroundX += backgroundMomentumX;
+        backgroundY += backgroundMomentumY;
     }
-    else if (spaceshipDirection == Direction::Up) {
-        backgroundY += backgroundScrollSpeed;
-    }
-    else backgroundY -= backgroundScrollSpeed;
+
+    // Reset momentum when it's very low to stop the background
+    if (fabs(backgroundMomentumX) < 0.001f) backgroundMomentumX = 0.0f;
+    if (fabs(backgroundMomentumY) < 0.001f) backgroundMomentumY = 0.0f;
+
+    // Boundary checks for the spaceship
+    if (spaceshipX > WORLD_WIDTH / 2) spaceshipX = -WORLD_WIDTH / 2;
+    if (spaceshipX < -WORLD_WIDTH / 2) spaceshipX = WORLD_WIDTH / 2;
+
+    // Boundary checks for Y coordinates
+    if (spaceshipY > WORLD_HEIGHT / 2) spaceshipY = -WORLD_HEIGHT / 2;
+    if (spaceshipY < -WORLD_HEIGHT / 2) spaceshipY = WORLD_HEIGHT / 2;
 
     // Update enemy spaceships by passing player's spaceship position
     enemyManager.update();

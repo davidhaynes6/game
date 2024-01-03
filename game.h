@@ -38,6 +38,7 @@ protected:
     void resizeGL(int w, int h) override;
     void paintGL() override;
     void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
     void updateGame();
 
 private:
@@ -48,6 +49,9 @@ private:
     QOpenGLTexture* bulletTexture = nullptr;
     QOpenGLTexture* enemyTexture = nullptr;
     float backgroundScrollSpeed = 0.0f;
+    float backgroundMomentumX = 0.0f;
+    float backgroundMomentumY = 0.0f;
+    const float MOMENTUM_DECREASE = 0.995f;
     enum Direction { Left, Right, Up, Down} spaceshipDirection;
     float spaceshipX = 0.0f, spaceshipY = 0.0f;
     float backgroundX = 0.0f, backgroundY = 0.0f;
@@ -55,5 +59,5 @@ private:
     float enemyAspectRatio = 0.0f;
     std::vector<Bullet> bullets;
     EnemyManager enemyManager;
- 
+    bool scroll = false;
 };
