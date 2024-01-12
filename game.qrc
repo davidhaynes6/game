@@ -2,7 +2,18 @@
     <qresource prefix="/game">
         <file>background.png</file>
         <file>bullet.png</file>
-        <file>spaceship.png</file>
         <file>enemy.png</file>
+        <file>spaceship.png</file>
+        <file>explosion_frame_0.png</file>
+        <file>explosion_frame_1.png</file>
+        <file>explosion_frame_2.png</file>
+        <file>explosion_frame_3.png</file>
+        <file>explosion_frame_4.png</file>
+        <file>explosion_frame_5.png</file>
+        <file>explosion_frame_6.png</file>
+        <file>explosion_frame_7.png</file>
+        <file>explosion_frame_8.png</file>
+        <file>explosion_frame_9.png</file>
+        <file>spaceship1.png</file>
     </qresource>
 </RCC>

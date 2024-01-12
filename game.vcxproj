@@ -99,10 +99,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bullet.cpp" />
+    <ClCompile Include="player.cpp" />
     <QtRcc Include="game.qrc" />
     <QtUic Include="game.ui" />
     <QtMoc Include="game.h" />
+    <ClCompile Include="collision.cpp" />
     <ClCompile Include="enemy.cpp" />
+    <ClCompile Include="explosion.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
     <None Include="game.ico" />
@@ -110,8 +114,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bullet.h" />
-    <ClInclude Include="constants.h" />
+    <ClInclude Include="collision.h" />
     <ClInclude Include="enemy.h" />
+    <ClInclude Include="explosion.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="settings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

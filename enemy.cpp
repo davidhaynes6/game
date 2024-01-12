@@ -1,5 +1,5 @@
 #include "enemy.h"
-#include "constants.h"
+#include "settings.h"
 #include <qmath.h>
 
 void EnemyManager::createRandomEnemySpaceship() {
@@ -16,8 +16,8 @@ float EnemyManager::getRandomFloat(float min, float max) {
 }
 
 void EnemyManager::generateRandomCoordinates(float& x, float& y) {
-    x = getRandomFloat(-WORLD_WIDTH / 2, WORLD_WIDTH / 2);
-    y = getRandomFloat(-WORLD_HEIGHT / 2, WORLD_HEIGHT / 2);
+    x = getRandomFloat(-GameSettings::WORLD_WIDTH / 2, GameSettings::WORLD_WIDTH / 2);
+    y = getRandomFloat(-GameSettings::WORLD_HEIGHT / 2, GameSettings::WORLD_HEIGHT / 2);
 }
 
 float EnemyManager::generateRandomVelocity(float minVelocity, float maxVelocity) {
@@ -40,21 +40,21 @@ void EnemyManager::update() {
 }
 
 void EnemyManager::handleBoundary(EnemySpaceship& enemy) {
-    if (enemy.x < -WORLD_WIDTH / 2) {
-        enemy.x = -WORLD_WIDTH / 2;
+    if (enemy.x < -GameSettings::WORLD_WIDTH / 2) {
+        enemy.x = -GameSettings::WORLD_WIDTH / 2;
         enemy.velocityX = -enemy.velocityX;
     }
-    else if (enemy.x > WORLD_WIDTH / 2) {
-        enemy.x = WORLD_WIDTH / 2;
+    else if (enemy.x > GameSettings::WORLD_WIDTH / 2) {
+        enemy.x = GameSettings::WORLD_WIDTH / 2;
         enemy.velocityX = -enemy.velocityX;
     }
 
-    if (enemy.y < -WORLD_HEIGHT / 2) {
-        enemy.y = -WORLD_HEIGHT / 2;
+    if (enemy.y < -GameSettings::WORLD_HEIGHT / 2) {
+        enemy.y = -GameSettings::WORLD_HEIGHT / 2;
         enemy.velocityY = -enemy.velocityY;
     }
-    else if (enemy.y > WORLD_HEIGHT / 2) {
-        enemy.y = WORLD_HEIGHT / 2;
+    else if (enemy.y > GameSettings::WORLD_HEIGHT / 2) {
+        enemy.y = GameSettings::WORLD_HEIGHT / 2;
         enemy.velocityY = -enemy.velocityY;
     }
 }

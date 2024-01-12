@@ -1,5 +1,5 @@
 #include "game.h"
-#include "constants.h"
+#include "settings.h"
 #include <QTimer>
 
 game::game(QWidget *parent) : QMainWindow(parent)
@@ -23,7 +23,7 @@ GameWidget::GameWidget(QWidget* parent) : QOpenGLWidget(parent)
     spaceshipY = 0.0f;
     backgroundX = 0.0f;
     backgroundY = 0.0f;
-    spaceshipDirection = Direction::Right;
+    spaceshipDirection = GameSettings::Direction::Right;
     spaceshipAspectRatio = 0.0f;
     backgroundScrollSpeed = 0.0f;
     moveSpeedX = moveSpeedY = 0.0f;
@@ -69,7 +69,7 @@ void GameWidget::drawBackground() {
 void GameWidget::drawEnemies() {
     // Render enemy spaceships
     enemyTexture->bind();
-    float enemyshipWidth = SPACESHIP_SIZE;
+    float enemyshipWidth = GameSettings::SPACESHIP_SIZE;
     float enemyshipHeight = enemyshipWidth / enemyAspectRatio;
     for (const auto& enemy : enemyManager.enemySpaceships) {
         glPushMatrix();
@@ -88,12 +88,12 @@ void GameWidget::drawEnemies() {
 void GameWidget::drawPlayerSpaceship() {
     // Draw spaceship
     spaceshipTexture->bind();
-    float spaceshipWidth = SPACESHIP_SIZE;
+    float spaceshipWidth = GameSettings::SPACESHIP_SIZE;
     float spaceshipHeight = spaceshipWidth / spaceshipAspectRatio;
 
     glPushMatrix();
     glTranslatef(spaceshipX, spaceshipY, 0.0f);
-    if (spaceshipDirection == Right) {
+    if (spaceshipDirection == GameSettings::Direction::Right) {
         glRotatef(180.0f, 0.0f, 1.0f, 0.0f); // Rotate 180 degrees to face right
     }
 
@@ -117,7 +117,7 @@ void GameWidget::drawBullets() {
         glPushMatrix();
 
         glTranslatef(bullet.x, bullet.y, 0.0f);
-        float bulletWidth = BULLET_SIZE;
+        float bulletWidth = GameSettings::BULLET_SIZE;
         float bulletHeight = bulletWidth; // Adjust based on the texture aspect ratio
 
         glBegin(GL_QUADS); // Begin defining a quadrilateral
@@ -226,21 +226,21 @@ void GameWidget::keyPressEvent(QKeyEvent* event) {
 
     switch (event->key()) {
     case Qt::Key_Up:
-        moveSpeedY = ACCELERATION;
+        moveSpeedY = GameSettings::ACCELERATION;
         scroll = true;
         break;
     case Qt::Key_Down:
-        moveSpeedY = -ACCELERATION;
+        moveSpeedY = -GameSettings::ACCELERATION;
         scroll = true;
         break;
     case Qt::Key_Left:
-        spaceshipDirection = Direction::Left;
-        moveSpeedX = -ACCELERATION;
+        spaceshipDirection = GameSettings::Direction::Left;
+        moveSpeedX = -GameSettings::ACCELERATION;
         scroll = true;
         break;
     case Qt::Key_Right:
-        spaceshipDirection = Direction::Right;
-        moveSpeedX = ACCELERATION;
+        spaceshipDirection = GameSettings::Direction::Right;
+        moveSpeedX = GameSettings::ACCELERATION;
         scroll = true;
         break;
     case Qt::Key_Space:
@@ -249,7 +249,7 @@ void GameWidget::keyPressEvent(QKeyEvent* event) {
         newBullet.y = spaceshipY;
 
         // Set bullet speed based on spaceship direction
-        if (spaceshipDirection == Left) {
+        if (spaceshipDirection == GameSettings::Direction::Left) {
             newBullet.speed = -0.1f; // Negative speed for leftward movement
         }
         else { // spaceshipDirection == Right
@@ -290,8 +290,8 @@ void GameWidget::updateGame() {
         spaceshipY += moveSpeedY;
     }
     else {
-        moveSpeedX *= FRICTION;
-        moveSpeedY *= FRICTION;
+        moveSpeedX *= GameSettings::FRICTION;
+        moveSpeedY *= GameSettings::FRICTION;
         spaceshipX += moveSpeedX;
         spaceshipY += moveSpeedY;
     }

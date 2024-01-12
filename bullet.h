@@ -1,15 +1,21 @@
 #pragma once
-#include "constants.h"
+#include "settings.h"
+#include <qpoint.h>
+#include <QOpenGLFunctions>
+#include <QOpenGLTexture>
 
 class Bullet {
 public:
-    float x, y; // Position of the bullet
-    float speed;
-    bool remove = false;
+    Bullet(const QPointF& startPosition, float speed, GameSettings::Direction dir, QOpenGLTexture* texture);
+    void update();
+    void draw() const;
+    QPointF getPosition() const;
+    QRectF getBoundingBox() const;
+    bool isOffScreen() const;
 
-    // Method to check if the bullet is out of the game scene
-    bool isOutOfScene() const {
-        return x < GAME_LEFT_BOUNDARY || x > GAME_RIGHT_BOUNDARY ||
-            y < GAME_BOTTOM_BOUNDARY || y > GAME_TOP_BOUNDARY;
-    }
+private:
+    QPointF position;
+    float speed;
+    GameSettings::Direction direction;
+    QOpenGLTexture* texture; 
 };

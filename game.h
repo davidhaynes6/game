@@ -6,7 +6,7 @@
 #include <QOpenGLTexture>
 #include <QKeyEvent>
 #include "ui_game.h"
-#include "constants.h"
+#include "settings.h"
 #include "enemy.h"
 
 struct Bullet {
@@ -48,7 +48,7 @@ private:
     QOpenGLTexture* bulletTexture = nullptr;
     QOpenGLTexture* enemyTexture = nullptr;
     float cameraX, cameraY; // Camera position
-    Direction spaceshipDirection;
+    GameSettings::Direction spaceshipDirection;
     float backgroundScrollSpeed = 0.0f;
     float backgroundMomentumX = 0.0f;
     float backgroundMomentumY = 0.0f;
