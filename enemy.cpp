@@ -1,6 +1,7 @@
 #include "enemy.h"
 #include "settings.h"
 #include <qmath.h>
+#include <QDebug>
 
 void EnemyManager::createRandomEnemySpaceship() {
     float randomX, randomY;
@@ -8,6 +9,7 @@ void EnemyManager::createRandomEnemySpaceship() {
 
     float randomVelocity = generateRandomVelocity(0.001f, 0.005f);
     EnemySpaceship enemy(randomX, randomY, randomVelocity);
+    qDebug() << "Enemy spaceship created at position: (" << enemy.x << "," << enemy.y << ") with size: " << GameSettings::SPACESHIP_SIZE;
     enemySpaceships.push_back(enemy);
 }
 

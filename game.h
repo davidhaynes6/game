@@ -41,6 +41,7 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
     void updateGame();
+    bool checkCollision(const Bullet& bullet, const EnemySpaceship& enemy);
 
 private:
     QOpenGLTexture* spaceshipTexture = nullptr;

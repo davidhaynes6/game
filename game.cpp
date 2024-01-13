@@ -83,6 +83,21 @@ void GameWidget::drawEnemies() {
         glPopMatrix();
     }
     enemyTexture->release();
+
+    // Draw bounding box for visual debugging
+    glColor3f(0.0f, 1.0f, 0.0f); // Green color for the bounding box
+    for (const auto& enemy : enemyManager.enemySpaceships) {
+        float enemyshipWidth = GameSettings::SPACESHIP_SIZE;
+        float enemyshipHeight = enemyshipWidth / enemyAspectRatio;
+
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(enemy.x - enemyshipWidth / 2, enemy.y - enemyshipHeight / 2);
+        glVertex2f(enemy.x + enemyshipWidth / 2, enemy.y - enemyshipHeight / 2);
+        glVertex2f(enemy.x + enemyshipWidth / 2, enemy.y + enemyshipHeight / 2);
+        glVertex2f(enemy.x - enemyshipWidth / 2, enemy.y + enemyshipHeight / 2);
+        glEnd();
+    }
+    glColor3f(1.0f, 1.0f, 1.0f); // Reset color
 }
 
 void GameWidget::drawPlayerSpaceship() {
@@ -131,6 +146,22 @@ void GameWidget::drawBullets() {
         glPopMatrix();
     }
     bulletTexture->release();
+
+
+    // Draw bounding box for visual debugging
+    glColor3f(1.0f, 0.0f, 0.0f); // Red color for the bounding box
+    for (const auto& bullet : bullets) {
+        float bulletWidth = GameSettings::BULLET_SIZE;
+        float bulletHeight = bulletWidth; // Assuming square bullets
+
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(bullet.x - bulletWidth / 2, bullet.y - bulletHeight / 2);
+        glVertex2f(bullet.x + bulletWidth / 2, bullet.y - bulletHeight / 2);
+        glVertex2f(bullet.x + bulletWidth / 2, bullet.y + bulletHeight / 2);
+        glVertex2f(bullet.x - bulletWidth / 2, bullet.y + bulletHeight / 2);
+        glEnd();
+    }
+    glColor3f(1.0f, 1.0f, 1.0f); // Reset color
 }
 
 // Initializes OpenGL settings.
@@ -222,7 +253,7 @@ void GameWidget::paintGL() {
 
 void GameWidget::keyPressEvent(QKeyEvent* event) {
     float backgroundScrollSpeed = 0.01f; 
-    qDebug() << "Key pressed: " << event->key();
+    //qDebug() << "Key pressed: " << event->key();
 
     switch (event->key()) {
     case Qt::Key_Up:
@@ -247,13 +278,15 @@ void GameWidget::keyPressEvent(QKeyEvent* event) {
         Bullet newBullet;
         newBullet.x = spaceshipX; // Initial position at the spaceship
         newBullet.y = spaceshipY;
+        
+        qDebug() << "Bullet created at position: (" << newBullet.x << "," << newBullet.y << ") with size: " << GameSettings::BULLET_SIZE;
 
         // Set bullet speed based on spaceship direction
         if (spaceshipDirection == GameSettings::Direction::Left) {
-            newBullet.speed = -0.1f; // Negative speed for leftward movement
+            newBullet.speed = -0.01f; // Negative speed for leftward movement
         }
         else { // spaceshipDirection == Right
-            newBullet.speed = 0.1f; // Positive speed for rightward movement
+            newBullet.speed = 0.01f; // Positive speed for rightward movement
         }
 
         bullets.push_back(newBullet);
@@ -313,8 +346,58 @@ void GameWidget::updateGame() {
         }
     }
 
+    // Update bullets and check for collisions
+    for (size_t i = 0; i < bullets.size();) {
+        bool bulletRemoved = false;
+        bullets[i].x += bullets[i].speed;
+
+        // Check for collision with enemy spaceships
+        for (size_t j = 0; j < enemyManager.enemySpaceships.size() && !bulletRemoved;) {
+            if (checkCollision(bullets[i], enemyManager.enemySpaceships[j])) {
+                qDebug() << "Collision detected. Removing bullet and enemy spaceship.";
+                // Remove bullet and enemy spaceship on collision
+                bullets.erase(bullets.begin() + i);
+                enemyManager.enemySpaceships.erase(enemyManager.enemySpaceships.begin() + j);
+                bulletRemoved = true;
+            }
+            else {
+                qDebug() << "No collision detected between bullet at index" << i << "and enemy spaceship at index" << j;
+                ++j;
+            }
+        }
+
+        if (!bulletRemoved && (bullets[i].x > screenBoundary || bullets[i].x < -screenBoundary)) {
+            bullets.erase(bullets.begin() + i);
+        }
+        else if (!bulletRemoved) {
+            ++i;
+        }
+    }
     update(); // Schedule a repaint
 }
+
+bool GameWidget::checkCollision(const Bullet& bullet, const EnemySpaceship& enemy) {
+    float bulletWidth = GameSettings::BULLET_SIZE;
+    float bulletHeight = bulletWidth; // Assuming square bullets
+
+    float enemyshipWidth = GameSettings::SPACESHIP_SIZE;
+    float enemyshipHeight = enemyshipWidth / enemyAspectRatio;
+
+    QRectF bulletRect(bullet.x - bulletWidth / 2, bullet.y - bulletHeight / 2, bulletWidth, bulletHeight);
+    QRectF enemyRect(enemy.x - enemyshipWidth / 2, enemy.y - enemyshipHeight / 2, enemyshipWidth, enemyshipHeight);
+
+    bool collision = bulletRect.intersects(enemyRect);
+
+    if (collision) {
+        qDebug() << "Collision detected between bullet and enemy spaceship.";
+    }
+    else {
+        qDebug() << "No collision. Bullet Rect:" << bulletRect << "Enemy Rect:" << enemyRect;
+    }
+
+    return collision;
+}
+
 
 
 
