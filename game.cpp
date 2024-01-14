@@ -106,6 +106,7 @@ void GameWidget::drawPlayerSpaceship() {
     float spaceshipWidth = GameSettings::SPACESHIP_SIZE;
     float spaceshipHeight = spaceshipWidth / spaceshipAspectRatio;
 
+
     glPushMatrix();
     glTranslatef(spaceshipX, spaceshipY, 0.0f);
     if (spaceshipDirection == GameSettings::Direction::Right) {
@@ -122,6 +123,21 @@ void GameWidget::drawPlayerSpaceship() {
     glPopMatrix();
 
     spaceshipTexture->release();
+
+
+    // Draw bounding box for debugging
+    glColor3f(1.0f, 0.0f, 0.0f); // Set color to red for the bounding box
+    glPushMatrix();
+    glTranslatef(spaceshipX, spaceshipY, 0.0f);
+    glBegin(GL_LINE_LOOP); // Begin drawing lines
+    glVertex2f(-spaceshipWidth / 2, -spaceshipHeight / 2); // Bottom-left corner
+    glVertex2f(spaceshipWidth / 2, -spaceshipHeight / 2);  // Bottom-right corner
+    glVertex2f(spaceshipWidth / 2, spaceshipHeight / 2);   // Top-right corner
+    glVertex2f(-spaceshipWidth / 2, spaceshipHeight / 2);  // Top-left corner
+    glEnd(); // End drawing lines
+    glPopMatrix();
+
+    glColor3f(1.0f, 1.0f, 1.0f); // Reset color to white
 }
 
 void GameWidget::drawBullets() {
@@ -244,11 +260,13 @@ void GameWidget::paintGL() {
     drawBackground();
     drawEnemies();
 
-    glPopMatrix();
-
     // Player Spaceship is always at the center
     drawPlayerSpaceship();
     drawBullets();
+    
+    glPopMatrix();
+
+
 }
 
 void GameWidget::keyPressEvent(QKeyEvent* event) {
@@ -317,12 +335,13 @@ void GameWidget::keyReleaseEvent(QKeyEvent* event) {
 
 void GameWidget::updateGame() {
     float screenBoundary = 1.0f; // Boundary for wrapping
-
+    
+    // Is player currently moving??
     if (scroll) {
         spaceshipX += moveSpeedX;
         spaceshipY += moveSpeedY;
     }
-    else {
+    else { // No? Slowly come to a stop
         moveSpeedX *= GameSettings::FRICTION;
         moveSpeedY *= GameSettings::FRICTION;
         spaceshipX += moveSpeedX;
@@ -331,6 +350,16 @@ void GameWidget::updateGame() {
 
     cameraX = -spaceshipX;
     cameraY = -spaceshipY;
+    
+    // Limit player movement within world boundaries
+    spaceshipX = qBound(-GameSettings::WORLD_WIDTH / 2, spaceshipX, GameSettings::WORLD_WIDTH / 2);
+    spaceshipY = qBound(-GameSettings::WORLD_HEIGHT / 2, spaceshipY, GameSettings::WORLD_HEIGHT / 2);
+
+    qDebug() << "Player position: " << spaceshipX << ", " << spaceshipY;
+    qDebug() << "Camera position: " << cameraX << ", " << cameraY;
+
+    // Constrain the spaceship within world boundaries
+    handleSpaceshipBoundary();
 
     // Update enemy spaceships by passing player's spaceship position
     enemyManager.update();
@@ -350,9 +379,16 @@ void GameWidget::updateGame() {
     for (size_t i = 0; i < bullets.size();) {
         bool bulletRemoved = false;
         bullets[i].x += bullets[i].speed;
-
+        qDebug() << "Bullet position: " << bullets[i].x << ", " << bullets[i].y;
+    
         // Check for collision with enemy spaceships
         for (size_t j = 0; j < enemyManager.enemySpaceships.size() && !bulletRemoved;) {
+
+            // Log positions right before checking for collision
+            qDebug() << "Checking collision between bullet at index " << i << " and enemy spaceship at index " << j;
+            qDebug() << "Bullet position: " << bullets[i].x << ", " << bullets[i].y;
+            qDebug() << "Enemy position: " << enemyManager.enemySpaceships[j].x << ", " << enemyManager.enemySpaceships[j].y;
+
             if (checkCollision(bullets[i], enemyManager.enemySpaceships[j])) {
                 qDebug() << "Collision detected. Removing bullet and enemy spaceship.";
                 // Remove bullet and enemy spaceship on collision
@@ -398,6 +434,21 @@ bool GameWidget::checkCollision(const Bullet& bullet, const EnemySpaceship& enem
     return collision;
 }
 
+void GameWidget::handleSpaceshipBoundary() {
+    if (spaceshipX < -GameSettings::WORLD_WIDTH / 2) {
+        spaceshipX = -GameSettings::WORLD_WIDTH / 2;
+    }
+    else if (spaceshipX > GameSettings::WORLD_WIDTH / 2) {
+        spaceshipX = GameSettings::WORLD_WIDTH / 2;
+    }
+
+    if (spaceshipY < -GameSettings::WORLD_HEIGHT / 2) {
+        spaceshipY = -GameSettings::WORLD_HEIGHT / 2;
+    }
+    else if (spaceshipY > GameSettings::WORLD_HEIGHT / 2) {
+        spaceshipY = GameSettings::WORLD_HEIGHT / 2;
+    }
+}
 
 
 

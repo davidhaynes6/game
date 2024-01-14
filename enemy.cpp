@@ -22,12 +22,15 @@ void EnemyManager::generateRandomCoordinates(float& x, float& y) {
     y = getRandomFloat(-GameSettings::WORLD_HEIGHT / 2, GameSettings::WORLD_HEIGHT / 2);
 }
 
+
 float EnemyManager::generateRandomVelocity(float minVelocity, float maxVelocity) {
     return getRandomFloat(minVelocity, maxVelocity);
 }
 
 void EnemyManager::update() {
     for (auto& enemy : enemySpaceships) {
+
+        // Direction
         if (rand() % 100 < 5) {
             float angle = static_cast<float>(rand()) / RAND_MAX * 2 * M_PI;
             enemy.velocityX = cos(angle) * enemy.speed;
@@ -38,6 +41,8 @@ void EnemyManager::update() {
         enemy.y += enemy.velocityY;
 
         handleBoundary(enemy);
+
+        qDebug() << "Enemy position: " << enemy.x << ", " << enemy.y;
     }
 }
 

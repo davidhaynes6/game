@@ -12,8 +12,7 @@ public:
     float moveX; // X-direction movement
     float moveY; // Y-direction movement
 
-    EnemySpaceship(float posX, float posY, float vel)
-        : x(posX), y(posY), speed(vel), velocityX(0), velocityY(0) {}
+    EnemySpaceship(float posX, float posY, float vel) : x(posX), y(posY), speed(vel), velocityX(0), velocityY(0) {}
 };
 
 

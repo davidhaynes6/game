@@ -16,8 +16,6 @@ public:
     static constexpr float SPACESHIP_SPEED = 0.02f;
     static constexpr float BULLET_WIDTH = 10.0f;
     static constexpr float BULLET_HEIGHT = 5.0f;
-    static constexpr float ENEMY_WIDTH = 30.0f;
-    static constexpr float ENEMY_HEIGHT = 20.0f;
     static constexpr float MOMENTUM_DECREASE = 0.995f;
     static constexpr float SCROLL_FACTOR_X = 0.005f;
     static constexpr float SCROLL_FACTOR_Y = 0.005f;
