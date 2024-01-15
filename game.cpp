@@ -1,6 +1,7 @@
 #include "game.h"
 #include "settings.h"
 #include <QTimer>
+#include "explosion.h"
 
 game::game(QWidget *parent) : QMainWindow(parent)
 {
@@ -39,6 +40,11 @@ GameWidget::~GameWidget() {
     delete backgroundTexture;
     delete bulletTexture;
     delete enemyTexture;
+    
+    for (auto* texture : Explosion::explosionTextures) {
+        delete texture;
+    }
+    Explosion::explosionTextures.clear();
 }
 
 void GameWidget::drawBackground() {
@@ -237,6 +243,9 @@ void GameWidget::initializeGL() {
     bulletTexture->setMinificationFilter(QOpenGLTexture::Nearest);
     bulletTexture->setMagnificationFilter(QOpenGLTexture::Linear);
     bulletTexture->setWrapMode(QOpenGLTexture::Repeat);
+
+    // Explosion
+    Explosion::loadTextures(this); // Load explosion textures
 }
 
 // Sets the viewport dimensions whenever the widget is resized.
@@ -264,6 +273,11 @@ void GameWidget::paintGL() {
     drawPlayerSpaceship();
     drawBullets();
     
+    // Render active explosions
+    for (auto& explosion : activeExplosions) {
+        explosion.render();
+    }
+
     glPopMatrix();
 
 
@@ -391,6 +405,10 @@ void GameWidget::updateGame() {
 
             if (checkCollision(bullets[i], enemyManager.enemySpaceships[j])) {
                 qDebug() << "Collision detected. Removing bullet and enemy spaceship.";
+
+                Explosion explosion(bullets[i].x, bullets[i].y);
+                activeExplosions.push_back(explosion);
+
                 // Remove bullet and enemy spaceship on collision
                 bullets.erase(bullets.begin() + i);
                 enemyManager.enemySpaceships.erase(enemyManager.enemySpaceships.begin() + j);
@@ -409,6 +427,18 @@ void GameWidget::updateGame() {
             ++i;
         }
     }
+
+    // Update active explosions
+    for (auto& explosion : activeExplosions) {
+        explosion.render();
+    }
+
+    // Remove finished explosions
+    activeExplosions.erase(
+        std::remove_if(activeExplosions.begin(), activeExplosions.end(),
+            [](const Explosion& e) { return e.isFinished(); }),
+        activeExplosions.end());
+
     update(); // Schedule a repaint
 }
 

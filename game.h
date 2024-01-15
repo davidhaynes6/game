@@ -8,6 +8,7 @@
 #include "ui_game.h"
 #include "settings.h"
 #include "enemy.h"
+#include "explosion.h"
 
 struct Bullet {
     float x, y;
@@ -59,6 +60,7 @@ private:
     float spaceshipAspectRatio = 0.0f;
     float enemyAspectRatio = 0.0f;
 
+    std::vector<Explosion> activeExplosions;
     std::vector<Bullet> bullets;
     EnemyManager enemyManager;
     bool scroll = false;
