@@ -1,7 +1,8 @@
 #include "game.h"
 #include "settings.h"
-#include <QTimer>
 #include "explosion.h"
+#include <QTimer>
+#include <QPainter>
 
 game::game(QWidget *parent) : QMainWindow(parent)
 {
@@ -258,6 +259,8 @@ void GameWidget::resizeGL(int w, int h) {
 // Renders a scrolling background.
 // Renders the spaceship with a fixed aspect ratio and position.
 void GameWidget::paintGL() {
+    QPainter painter(this);
+
     // Clear the screen to the clear color
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -277,6 +280,11 @@ void GameWidget::paintGL() {
     for (auto& explosion : activeExplosions) {
         explosion.render();
     }
+
+    // Draw the player's score
+    painter.setPen(Qt::white); // Set the color for the text
+    painter.setFont(QFont("Arial", 12)); // Set the font for the text
+    painter.drawText(10, 30, QString("Score: %1").arg(score));
 
     glPopMatrix();
 
@@ -413,6 +421,9 @@ void GameWidget::updateGame() {
                 bullets.erase(bullets.begin() + i);
                 enemyManager.enemySpaceships.erase(enemyManager.enemySpaceships.begin() + j);
                 bulletRemoved = true;
+
+                // Update score
+                score += 10;
             }
             else {
                 qDebug() << "No collision detected between bullet at index" << i << "and enemy spaceship at index" << j;

@@ -65,6 +65,7 @@ private:
     EnemyManager enemyManager;
     bool scroll = false;
     float moveSpeedX, moveSpeedY = 0.0f;
+    int score = 0;
 
     void drawBackground();
     void drawEnemies();
