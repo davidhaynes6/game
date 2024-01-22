@@ -1,8 +1,8 @@
 #pragma once
 class GameSettings {
 public:
-    static constexpr float WORLD_WIDTH = 2.0f;
-    static constexpr float WORLD_HEIGHT = 2.0f;
+    static constexpr float WORLD_WIDTH = 2.5f;
+    static constexpr float WORLD_HEIGHT = 2.5f;
     static constexpr float MOMENTUM_DECREASE_FACTOR = 0.95f;
     static constexpr float ACCELERATION = 0.01f;
     static constexpr float FRICTION = 0.98f;
@@ -21,6 +21,9 @@ public:
     static constexpr float SCROLL_FACTOR_Y = 0.005f;
     static constexpr float BACKGROUND_SCALE_X = 2.0f; 
     static constexpr float BACKGROUND_SCALE_Y = 2.0f; 
+    static constexpr int   LIFEICONSIZE = 30; // Adjust the size of the life icon
+    static constexpr int   X_OFFSET = 10; // Adjust the horizontal offset
+    static constexpr int   Y_OFFSET = 10; // Adjust the vertical offset
 
     enum Direction { Left, Right, Up, Down };
 

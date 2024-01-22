@@ -3,6 +3,7 @@
 #include "explosion.h"
 #include <QTimer>
 #include <QPainter>
+#include <QFontDatabase>
 
 game::game(QWidget *parent) : QMainWindow(parent)
 {
@@ -25,10 +26,16 @@ GameWidget::GameWidget(QWidget* parent) : QOpenGLWidget(parent)
     spaceshipY = 0.0f;
     backgroundX = 0.0f;
     backgroundY = 0.0f;
+    cameraX = 0.0f;
+    cameraY = 0.0f;
     spaceshipDirection = GameSettings::Direction::Right;
     spaceshipAspectRatio = 0.0f;
     backgroundScrollSpeed = 0.0f;
+    backgroundWidth = 0;
+    backgroundHeight = 0;
     moveSpeedX = moveSpeedY = 0.0f;
+
+    playerLives = 3;
 
     // Create a timer for updating the game at approximately 60fps
     QTimer* timer = new QTimer(this);
@@ -41,7 +48,8 @@ GameWidget::~GameWidget() {
     delete backgroundTexture;
     delete bulletTexture;
     delete enemyTexture;
-    
+    delete spacecraftLifeTexture;
+
     for (auto* texture : Explosion::explosionTextures) {
         delete texture;
     }
@@ -51,27 +59,20 @@ GameWidget::~GameWidget() {
 void GameWidget::drawBackground() {
     backgroundTexture->bind();
 
-    // Adjust these factors to control the speed of scrolling and the scale of the background
-    const float SCROLL_FACTOR_X = 0.005f;
-    const float SCROLL_FACTOR_Y = 0.005f;
-    const float BACKGROUND_SCALE_X = 2.0f; // Adjust as needed for your texture
-    const float BACKGROUND_SCALE_Y = 2.0f; // Adjust as needed for your texture
-
-    // Calculate texture offset for repeating background
-    float backgroundOffsetX = cameraX * SCROLL_FACTOR_X;
-    float backgroundOffsetY = cameraY * SCROLL_FACTOR_Y;
+     // Calculate texture offset for repeating background
+    float backgroundOffsetX = cameraX * GameSettings::SCROLL_FACTOR_X;
+    float backgroundOffsetY = cameraY * GameSettings::SCROLL_FACTOR_Y;
 
     // Repeat the texture
     glBegin(GL_QUADS);
-    glTexCoord2f(backgroundOffsetX, backgroundOffsetY); glVertex2f(-BACKGROUND_SCALE_X, -BACKGROUND_SCALE_Y);
-    glTexCoord2f(backgroundOffsetX + BACKGROUND_SCALE_X, backgroundOffsetY); glVertex2f(BACKGROUND_SCALE_X, -BACKGROUND_SCALE_Y);
-    glTexCoord2f(backgroundOffsetX + BACKGROUND_SCALE_X, backgroundOffsetY + BACKGROUND_SCALE_Y); glVertex2f(BACKGROUND_SCALE_X, BACKGROUND_SCALE_Y);
-    glTexCoord2f(backgroundOffsetX, backgroundOffsetY + BACKGROUND_SCALE_Y); glVertex2f(-BACKGROUND_SCALE_X, BACKGROUND_SCALE_Y);
+    glTexCoord2f(backgroundOffsetX, backgroundOffsetY); glVertex2f(-GameSettings::BACKGROUND_SCALE_X, -GameSettings::BACKGROUND_SCALE_Y);
+    glTexCoord2f(backgroundOffsetX + GameSettings::BACKGROUND_SCALE_X, backgroundOffsetY); glVertex2f(GameSettings::BACKGROUND_SCALE_X, -GameSettings::BACKGROUND_SCALE_Y);
+    glTexCoord2f(backgroundOffsetX + GameSettings::BACKGROUND_SCALE_X, backgroundOffsetY + GameSettings::BACKGROUND_SCALE_Y); glVertex2f(GameSettings::BACKGROUND_SCALE_X, GameSettings::BACKGROUND_SCALE_Y);
+    glTexCoord2f(backgroundOffsetX, backgroundOffsetY + GameSettings::BACKGROUND_SCALE_Y); glVertex2f(-GameSettings::BACKGROUND_SCALE_X, GameSettings::BACKGROUND_SCALE_Y);
     glEnd();
 
     backgroundTexture->release();
 }
-
 
 void GameWidget::drawEnemies() {
     // Render enemy spaceships
@@ -90,21 +91,6 @@ void GameWidget::drawEnemies() {
         glPopMatrix();
     }
     enemyTexture->release();
-
-    // Draw bounding box for visual debugging
-    glColor3f(0.0f, 1.0f, 0.0f); // Green color for the bounding box
-    for (const auto& enemy : enemyManager.enemySpaceships) {
-        float enemyshipWidth = GameSettings::SPACESHIP_SIZE;
-        float enemyshipHeight = enemyshipWidth / enemyAspectRatio;
-
-        glBegin(GL_LINE_LOOP);
-        glVertex2f(enemy.x - enemyshipWidth / 2, enemy.y - enemyshipHeight / 2);
-        glVertex2f(enemy.x + enemyshipWidth / 2, enemy.y - enemyshipHeight / 2);
-        glVertex2f(enemy.x + enemyshipWidth / 2, enemy.y + enemyshipHeight / 2);
-        glVertex2f(enemy.x - enemyshipWidth / 2, enemy.y + enemyshipHeight / 2);
-        glEnd();
-    }
-    glColor3f(1.0f, 1.0f, 1.0f); // Reset color
 }
 
 void GameWidget::drawPlayerSpaceship() {
@@ -130,21 +116,6 @@ void GameWidget::drawPlayerSpaceship() {
     glPopMatrix();
 
     spaceshipTexture->release();
-
-
-    // Draw bounding box for debugging
-    glColor3f(1.0f, 0.0f, 0.0f); // Set color to red for the bounding box
-    glPushMatrix();
-    glTranslatef(spaceshipX, spaceshipY, 0.0f);
-    glBegin(GL_LINE_LOOP); // Begin drawing lines
-    glVertex2f(-spaceshipWidth / 2, -spaceshipHeight / 2); // Bottom-left corner
-    glVertex2f(spaceshipWidth / 2, -spaceshipHeight / 2);  // Bottom-right corner
-    glVertex2f(spaceshipWidth / 2, spaceshipHeight / 2);   // Top-right corner
-    glVertex2f(-spaceshipWidth / 2, spaceshipHeight / 2);  // Top-left corner
-    glEnd(); // End drawing lines
-    glPopMatrix();
-
-    glColor3f(1.0f, 1.0f, 1.0f); // Reset color to white
 }
 
 void GameWidget::drawBullets() {
@@ -169,22 +140,6 @@ void GameWidget::drawBullets() {
         glPopMatrix();
     }
     bulletTexture->release();
-
-
-    // Draw bounding box for visual debugging
-    glColor3f(1.0f, 0.0f, 0.0f); // Red color for the bounding box
-    for (const auto& bullet : bullets) {
-        float bulletWidth = GameSettings::BULLET_SIZE;
-        float bulletHeight = bulletWidth; // Assuming square bullets
-
-        glBegin(GL_LINE_LOOP);
-        glVertex2f(bullet.x - bulletWidth / 2, bullet.y - bulletHeight / 2);
-        glVertex2f(bullet.x + bulletWidth / 2, bullet.y - bulletHeight / 2);
-        glVertex2f(bullet.x + bulletWidth / 2, bullet.y + bulletHeight / 2);
-        glVertex2f(bullet.x - bulletWidth / 2, bullet.y + bulletHeight / 2);
-        glEnd();
-    }
-    glColor3f(1.0f, 1.0f, 1.0f); // Reset color
 }
 
 // Initializes OpenGL settings.
@@ -196,6 +151,17 @@ void GameWidget::initializeGL() {
     glEnable(GL_TEXTURE_2D);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // Load the spacecraft life texture
+    QImage spacecraftLifeImage(":/game/playerLife.png"); // Adjust the path to your image
+    if (spacecraftLifeImage.isNull()) {
+        qDebug() << "Failed to load spaceship.png life image";
+    }
+
+    spacecraftLifeTexture = new QOpenGLTexture(spacecraftLifeImage.mirrored());
+    spacecraftLifeTexture->setMinificationFilter(QOpenGLTexture::Nearest);
+    spacecraftLifeTexture->setMagnificationFilter(QOpenGLTexture::Linear);
+    spacecraftLifeTexture->setWrapMode(QOpenGLTexture::Repeat);
 
     // Load Textures
     // Enemy
@@ -215,8 +181,8 @@ void GameWidget::initializeGL() {
         qDebug() << "Failed to load background image";
     }
     // set width and height
-    BACKGROUND_TEXTURE_WIDTH = backgroundImage.width();
-    BACKGROUND_TEXTURE_HEIGHT = backgroundImage.height();
+    backgroundWidth = backgroundImage.width();
+    backgroundHeight = backgroundImage.height();
 
     backgroundTexture = new QOpenGLTexture(backgroundImage.mirrored());
     backgroundTexture->setWrapMode(QOpenGLTexture::Repeat);
@@ -244,7 +210,7 @@ void GameWidget::initializeGL() {
     bulletTexture->setMinificationFilter(QOpenGLTexture::Nearest);
     bulletTexture->setMagnificationFilter(QOpenGLTexture::Linear);
     bulletTexture->setWrapMode(QOpenGLTexture::Repeat);
-
+  
     // Explosion
     Explosion::loadTextures(this); // Load explosion textures
 }
@@ -253,13 +219,47 @@ void GameWidget::initializeGL() {
 void GameWidget::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
 }
+void GameWidget::drawLives()
+{
+    for (int life = 0; life < playerLives; ++life) {
+        // Calculate the position for each life icon
+        int xPosition = GameSettings::X_OFFSET;
+        int yPosition = GameSettings::Y_OFFSET;
 
-// Handles the rendering of each frame.
-// Clears the screen.
-// Renders a scrolling background.
-// Renders the spaceship with a fixed aspect ratio and position.
-void GameWidget::paintGL() {
+        // Bind the spacecraft life image texture
+        glBindTexture(GL_TEXTURE_2D, spacecraftLifeTexture->textureId());
+
+        // Draw the life icon as a textured quad
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(xPosition, yPosition);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(xPosition + GameSettings::LIFEICONSIZE, yPosition);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(xPosition + GameSettings::LIFEICONSIZE, yPosition + GameSettings::LIFEICONSIZE);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(xPosition, yPosition + GameSettings::LIFEICONSIZE);
+        glEnd();
+
+        xPosition += GameSettings::LIFEICONSIZE + 5; // adjust for space
+
+        // Unbind the texture
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    // Check for OpenGL errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        qDebug() << "OpenGL error in drawLives(): " << error;
+    }
+}
+void GameWidget::drawScore()
+{
     QPainter painter(this);
+
+    QFontDatabase::addApplicationFont(":/game/defender.ttf");
+    painter.setPen(Qt::white); // Set the color for the text
+    painter.setFont(QFont("Defender", 12)); // Set the font for the text
+    painter.drawText(10, 30, QString("Score: %1").arg(score));
+}
+void GameWidget::paintGL() {
+
 
     // Clear the screen to the clear color
     glClear(GL_COLOR_BUFFER_BIT);
@@ -270,30 +270,43 @@ void GameWidget::paintGL() {
 
     // Draw the background, enemies, etc., relative to the camera
     drawBackground();
+
     drawEnemies();
 
     // Player Spaceship is always at the center
     drawPlayerSpaceship();
     drawBullets();
     
+    // Draw upper boundary line
+    glColor3f(1.0f, 0.0f, 0.0f); // Set color to red
+    glBegin(GL_LINES);
+    glVertex2f(-GameSettings::WORLD_WIDTH / 2, GameSettings::WORLD_HEIGHT / 2); // Start of the line
+    glVertex2f(GameSettings::WORLD_WIDTH / 2, GameSettings::WORLD_HEIGHT / 2);  // End of the line
+    glEnd();
+
+    // Draw lower boundary line
+    glBegin(GL_LINES);
+    glVertex2f(-GameSettings::WORLD_WIDTH / 2, -GameSettings::WORLD_HEIGHT / 2); // Start of the line
+    glVertex2f(GameSettings::WORLD_WIDTH / 2, -GameSettings::WORLD_HEIGHT / 2);  // End of the line
+    glEnd();
+    glColor3f(1.0f, 1.0f, 1.0f); // Reset color
+    
     // Render active explosions
     for (auto& explosion : activeExplosions) {
         explosion.render();
     }
+    
+    // Draw spacecraft lives
+    drawLives();
 
     // Draw the player's score
-    painter.setPen(Qt::white); // Set the color for the text
-    painter.setFont(QFont("Arial", 12)); // Set the font for the text
-    painter.drawText(10, 30, QString("Score: %1").arg(score));
-
+    drawScore();
+ 
     glPopMatrix();
-
-
 }
 
 void GameWidget::keyPressEvent(QKeyEvent* event) {
     float backgroundScrollSpeed = 0.01f; 
-    //qDebug() << "Key pressed: " << event->key();
 
     switch (event->key()) {
     case Qt::Key_Up:
@@ -318,8 +331,6 @@ void GameWidget::keyPressEvent(QKeyEvent* event) {
         Bullet newBullet;
         newBullet.x = spaceshipX; // Initial position at the spaceship
         newBullet.y = spaceshipY;
-        
-        qDebug() << "Bullet created at position: (" << newBullet.x << "," << newBullet.y << ") with size: " << GameSettings::BULLET_SIZE;
 
         // Set bullet speed based on spaceship direction
         if (spaceshipDirection == GameSettings::Direction::Left) {
@@ -377,9 +388,6 @@ void GameWidget::updateGame() {
     spaceshipX = qBound(-GameSettings::WORLD_WIDTH / 2, spaceshipX, GameSettings::WORLD_WIDTH / 2);
     spaceshipY = qBound(-GameSettings::WORLD_HEIGHT / 2, spaceshipY, GameSettings::WORLD_HEIGHT / 2);
 
-    qDebug() << "Player position: " << spaceshipX << ", " << spaceshipY;
-    qDebug() << "Camera position: " << cameraX << ", " << cameraY;
-
     // Constrain the spaceship within world boundaries
     handleSpaceshipBoundary();
 
@@ -401,18 +409,12 @@ void GameWidget::updateGame() {
     for (size_t i = 0; i < bullets.size();) {
         bool bulletRemoved = false;
         bullets[i].x += bullets[i].speed;
-        qDebug() << "Bullet position: " << bullets[i].x << ", " << bullets[i].y;
+        //qDebug() << "Bullet position: " << bullets[i].x << ", " << bullets[i].y;
     
         // Check for collision with enemy spaceships
         for (size_t j = 0; j < enemyManager.enemySpaceships.size() && !bulletRemoved;) {
 
-            // Log positions right before checking for collision
-            qDebug() << "Checking collision between bullet at index " << i << " and enemy spaceship at index " << j;
-            qDebug() << "Bullet position: " << bullets[i].x << ", " << bullets[i].y;
-            qDebug() << "Enemy position: " << enemyManager.enemySpaceships[j].x << ", " << enemyManager.enemySpaceships[j].y;
-
             if (checkCollision(bullets[i], enemyManager.enemySpaceships[j])) {
-                qDebug() << "Collision detected. Removing bullet and enemy spaceship.";
 
                 Explosion explosion(bullets[i].x, bullets[i].y);
                 activeExplosions.push_back(explosion);
@@ -426,7 +428,6 @@ void GameWidget::updateGame() {
                 score += 10;
             }
             else {
-                qDebug() << "No collision detected between bullet at index" << i << "and enemy spaceship at index" << j;
                 ++j;
             }
         }
@@ -446,9 +447,7 @@ void GameWidget::updateGame() {
 
     // Remove finished explosions
     activeExplosions.erase(
-        std::remove_if(activeExplosions.begin(), activeExplosions.end(),
-            [](const Explosion& e) { return e.isFinished(); }),
-        activeExplosions.end());
+        std::remove_if(activeExplosions.begin(), activeExplosions.end(), [](const Explosion& e) { return e.isFinished(); }), activeExplosions.end());
 
     update(); // Schedule a repaint
 }
@@ -464,13 +463,6 @@ bool GameWidget::checkCollision(const Bullet& bullet, const EnemySpaceship& enem
     QRectF enemyRect(enemy.x - enemyshipWidth / 2, enemy.y - enemyshipHeight / 2, enemyshipWidth, enemyshipHeight);
 
     bool collision = bulletRect.intersects(enemyRect);
-
-    if (collision) {
-        qDebug() << "Collision detected between bullet and enemy spaceship.";
-    }
-    else {
-        qDebug() << "No collision. Bullet Rect:" << bulletRect << "Enemy Rect:" << enemyRect;
-    }
 
     return collision;
 }

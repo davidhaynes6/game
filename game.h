@@ -38,6 +38,8 @@ public:
 protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
+    void drawLives();
+    void drawScore();
     void paintGL() override;
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
@@ -46,6 +48,7 @@ protected:
     void handleSpaceshipBoundary();
 
 private:
+    QOpenGLTexture* spacecraftLifeTexture = nullptr;
     QOpenGLTexture* spaceshipTexture = nullptr;
     QOpenGLTexture* backgroundTexture = nullptr;
     QOpenGLTexture* bulletTexture = nullptr;
@@ -59,6 +62,7 @@ private:
     float backgroundX = 0.0f, backgroundY = 0.0f;
     float spaceshipAspectRatio = 0.0f;
     float enemyAspectRatio = 0.0f;
+    int playerLives;
 
     std::vector<Explosion> activeExplosions;
     std::vector<Bullet> bullets;
@@ -72,7 +76,6 @@ private:
     void drawPlayerSpaceship();
     void drawBullets();
 
-    // TODO FIX:
-    int BACKGROUND_TEXTURE_WIDTH;
-    int BACKGROUND_TEXTURE_HEIGHT;
+    int backgroundWidth;
+    int backgroundHeight;
 };

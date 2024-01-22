@@ -50,10 +50,10 @@ QRectF Bullet::getBoundingBox() const {
 bool Bullet::isOffScreen() const {
     // Assuming you have a way to define the boundaries of your game screen
     // For example, you might have screen width and height defined somewhere
-    const float screenLeft = -1.0f;  // Left boundary
-    const float screenRight = 1.0f;  // Right boundary
-    const float screenTop = 1.0f;    // Top boundary
-    const float screenBottom = -1.0f; // Bottom boundary
+    const float screenLeft = -2.0f;  // Left boundary
+    const float screenRight = 2.0f;  // Right boundary
+    const float screenTop = 2.0f;    // Top boundary
+    const float screenBottom = -2.0f; // Bottom boundary
 
     // Check if the bullet's position is outside these boundaries
     return position.x() < screenLeft || position.x() > screenRight ||
