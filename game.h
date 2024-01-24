@@ -48,11 +48,11 @@ protected:
     void handleSpaceshipBoundary();
 
 private:
-    QOpenGLTexture* spacecraftLifeTexture = nullptr;
-    QOpenGLTexture* spaceshipTexture = nullptr;
-    QOpenGLTexture* backgroundTexture = nullptr;
-    QOpenGLTexture* bulletTexture = nullptr;
-    QOpenGLTexture* enemyTexture = nullptr;
+    std::unique_ptr<QOpenGLTexture> playerLifeTexture = nullptr;
+    std::unique_ptr<QOpenGLTexture> spaceshipTexture = nullptr;
+    std::unique_ptr<QOpenGLTexture> backgroundTexture = nullptr;
+    std::unique_ptr<QOpenGLTexture> bulletTexture = nullptr;
+    std::unique_ptr<QOpenGLTexture> enemyTexture = nullptr;
     float cameraX, cameraY; // Camera position
     GameSettings::Direction spaceshipDirection;
     float backgroundScrollSpeed = 0.0f;

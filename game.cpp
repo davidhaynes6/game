@@ -44,11 +44,6 @@ GameWidget::GameWidget(QWidget* parent) : QOpenGLWidget(parent)
 }
 
 GameWidget::~GameWidget() {
-    delete spaceshipTexture;
-    delete backgroundTexture;
-    delete bulletTexture;
-    delete enemyTexture;
-    delete spacecraftLifeTexture;
 
     for (auto* texture : Explosion::explosionTextures) {
         delete texture;
@@ -152,17 +147,6 @@ void GameWidget::initializeGL() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Load the spacecraft life texture
-    QImage spacecraftLifeImage(":/game/playerLife.png"); // Adjust the path to your image
-    if (spacecraftLifeImage.isNull()) {
-        qDebug() << "Failed to load spaceship.png life image";
-    }
-
-    spacecraftLifeTexture = new QOpenGLTexture(spacecraftLifeImage.mirrored());
-    spacecraftLifeTexture->setMinificationFilter(QOpenGLTexture::Nearest);
-    spacecraftLifeTexture->setMagnificationFilter(QOpenGLTexture::Linear);
-    spacecraftLifeTexture->setWrapMode(QOpenGLTexture::Repeat);
-
     // Load Textures
     // Enemy
     QImage enemyImage(":/game/enemy.png");
@@ -170,7 +154,7 @@ void GameWidget::initializeGL() {
         qDebug() << "Failed to load enemy image";
     }
     enemyAspectRatio = static_cast<float>(enemyImage.width()) / static_cast<float>(enemyImage.height());
-    enemyTexture = new QOpenGLTexture(enemyImage.mirrored());
+    enemyTexture = std::make_unique<QOpenGLTexture>(enemyImage.mirrored());
     enemyTexture->setMinificationFilter(QOpenGLTexture::Nearest);
     enemyTexture->setMagnificationFilter(QOpenGLTexture::Linear);
     enemyTexture->setWrapMode(QOpenGLTexture::Repeat);
@@ -184,7 +168,7 @@ void GameWidget::initializeGL() {
     backgroundWidth = backgroundImage.width();
     backgroundHeight = backgroundImage.height();
 
-    backgroundTexture = new QOpenGLTexture(backgroundImage.mirrored());
+    backgroundTexture = std::make_unique<QOpenGLTexture>(backgroundImage.mirrored());
     backgroundTexture->setWrapMode(QOpenGLTexture::Repeat);
     backgroundTexture->setMinificationFilter(QOpenGLTexture::Nearest);
     backgroundTexture->setMagnificationFilter(QOpenGLTexture::Linear);
@@ -196,7 +180,7 @@ void GameWidget::initializeGL() {
         qDebug() << "Failed to load spacecraft image";
     }
     spaceshipAspectRatio = static_cast<float>(spaceshipImage.width()) / static_cast<float>(spaceshipImage.height());
-    spaceshipTexture = new QOpenGLTexture(spaceshipImage.mirrored(false, true));
+    spaceshipTexture = std::make_unique<QOpenGLTexture>(spaceshipImage.mirrored(false, true));
     spaceshipTexture->setMinificationFilter(QOpenGLTexture::Nearest);
     spaceshipTexture->setMagnificationFilter(QOpenGLTexture::Linear);
     spaceshipTexture->setWrapMode(QOpenGLTexture::Repeat);
@@ -206,7 +190,7 @@ void GameWidget::initializeGL() {
     if (bulletImage.isNull()) {
         qDebug() << "Failed to load bullet image";
     }
-    bulletTexture = new QOpenGLTexture(bulletImage.mirrored());
+    bulletTexture = std::make_unique<QOpenGLTexture>(bulletImage.mirrored());
     bulletTexture->setMinificationFilter(QOpenGLTexture::Nearest);
     bulletTexture->setMagnificationFilter(QOpenGLTexture::Linear);
     bulletTexture->setWrapMode(QOpenGLTexture::Repeat);
@@ -219,47 +203,61 @@ void GameWidget::initializeGL() {
 void GameWidget::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
 }
+
 void GameWidget::drawLives()
-{
-    for (int life = 0; life < playerLives; ++life) {
-        // Calculate the position for each life icon
-        int xPosition = GameSettings::X_OFFSET;
-        int yPosition = GameSettings::Y_OFFSET;
-
-        // Bind the spacecraft life image texture
-        glBindTexture(GL_TEXTURE_2D, spacecraftLifeTexture->textureId());
-
-        // Draw the life icon as a textured quad
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(xPosition, yPosition);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(xPosition + GameSettings::LIFEICONSIZE, yPosition);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(xPosition + GameSettings::LIFEICONSIZE, yPosition + GameSettings::LIFEICONSIZE);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(xPosition, yPosition + GameSettings::LIFEICONSIZE);
-        glEnd();
-
-        xPosition += GameSettings::LIFEICONSIZE + 5; // adjust for space
-
-        // Unbind the texture
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    // Check for OpenGL errors
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        qDebug() << "OpenGL error in drawLives(): " << error;
-    }
-}
-void GameWidget::drawScore()
 {
     QPainter painter(this);
 
+    // Draw player life icons above the score
+    int xPosition = 20; // Adjust X position for life icons
+    int yPosition = 10; // Adjust Y position to place icons above the score
+
+    int playerLifeIconWidth = 60; // Adjust the width of the player life icons
+    int playerLifeIconHeight = GameSettings::LIFEICONSIZE;
+
+    for (int life = 0; life < playerLives; ++life) {
+        // Draw the player life icon
+        QPixmap playerLifePixmap(":/game/playerLife.png");
+
+        float width = playerLifePixmap.width();
+        float height = playerLifePixmap.height();
+
+        // Calculate the position for each player life icon
+        int iconXPosition = xPosition + life * (width + 10); // Adjust X position for each icon
+               
+              
+        playerLifePixmap = playerLifePixmap.scaled(width, height, Qt::KeepAspectRatio);
+        painter.drawPixmap(iconXPosition, yPosition, playerLifePixmap);
+        qDebug() << "iconXPosition: " << iconXPosition;
+        qDebug() << "yPosition: " << yPosition;
+    }
+
+    // Enable 2D texturing again for other OpenGL rendering
+    glEnable(GL_TEXTURE_2D);
+}
+
+void GameWidget::drawScore()
+{
+    // Enable 2D texturing
+    glEnable(GL_TEXTURE_2D);
+
+    // Set the position for the score text (screen coordinates)
+    int xPosition = 20; // Adjust X position
+    int yPosition = 60; // Adjust Y position
+
+    // Use QPainter to draw the score text on the screen
+    QPainter painter(this);
     QFontDatabase::addApplicationFont(":/game/defender.ttf");
     painter.setPen(Qt::white); // Set the color for the text
     painter.setFont(QFont("Defender", 12)); // Set the font for the text
-    painter.drawText(10, 30, QString("Score: %1").arg(score));
-}
-void GameWidget::paintGL() {
+    painter.drawText(xPosition, yPosition, QString("Score: %1").arg(score));
 
+    // Disable 2D texturing
+    glDisable(GL_TEXTURE_2D);
+}
+
+
+void GameWidget::paintGL() {
 
     // Clear the screen to the clear color
     glClear(GL_COLOR_BUFFER_BIT);
@@ -276,21 +274,7 @@ void GameWidget::paintGL() {
     // Player Spaceship is always at the center
     drawPlayerSpaceship();
     drawBullets();
-    
-    // Draw upper boundary line
-    glColor3f(1.0f, 0.0f, 0.0f); // Set color to red
-    glBegin(GL_LINES);
-    glVertex2f(-GameSettings::WORLD_WIDTH / 2, GameSettings::WORLD_HEIGHT / 2); // Start of the line
-    glVertex2f(GameSettings::WORLD_WIDTH / 2, GameSettings::WORLD_HEIGHT / 2);  // End of the line
-    glEnd();
-
-    // Draw lower boundary line
-    glBegin(GL_LINES);
-    glVertex2f(-GameSettings::WORLD_WIDTH / 2, -GameSettings::WORLD_HEIGHT / 2); // Start of the line
-    glVertex2f(GameSettings::WORLD_WIDTH / 2, -GameSettings::WORLD_HEIGHT / 2);  // End of the line
-    glEnd();
-    glColor3f(1.0f, 1.0f, 1.0f); // Reset color
-    
+       
     // Render active explosions
     for (auto& explosion : activeExplosions) {
         explosion.render();
@@ -367,7 +351,6 @@ void GameWidget::keyReleaseEvent(QKeyEvent* event) {
 }
 
 void GameWidget::updateGame() {
-    float screenBoundary = 1.0f; // Boundary for wrapping
     
     // Is player currently moving??
     if (scroll) {
@@ -375,8 +358,8 @@ void GameWidget::updateGame() {
         spaceshipY += moveSpeedY;
     }
     else { // No? Slowly come to a stop
-        moveSpeedX *= GameSettings::FRICTION;
-        moveSpeedY *= GameSettings::FRICTION;
+        moveSpeedX *= GameSettings::MOMENTUM_DECREASE;
+        moveSpeedY *= GameSettings::MOMENTUM_DECREASE;
         spaceshipX += moveSpeedX;
         spaceshipY += moveSpeedY;
     }
@@ -397,7 +380,7 @@ void GameWidget::updateGame() {
     // Update bullets and check boundaries
     for (size_t i = 0; i < bullets.size();) {
         bullets[i].x += bullets[i].speed;
-        if (bullets[i].x > screenBoundary || bullets[i].x < -screenBoundary) {
+        if (bullets[i].x > GameSettings::SCREENBOUNDARY || bullets[i].x < -GameSettings::SCREENBOUNDARY) {
             bullets.erase(bullets.begin() + i);
         }
         else {
@@ -432,7 +415,7 @@ void GameWidget::updateGame() {
             }
         }
 
-        if (!bulletRemoved && (bullets[i].x > screenBoundary || bullets[i].x < -screenBoundary)) {
+        if (!bulletRemoved && (bullets[i].x > GameSettings::SCREENBOUNDARY || bullets[i].x < -GameSettings::SCREENBOUNDARY)) {
             bullets.erase(bullets.begin() + i);
         }
         else if (!bulletRemoved) {
