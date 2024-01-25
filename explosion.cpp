@@ -9,7 +9,6 @@ Explosion::Explosion(float x, float y) : posX(x), posY(y), currentFrame(0), fini
 
 void Explosion::loadTextures(QOpenGLFunctions* glFunctions) {
     for (int i = 0; i < totalFrames; ++i) {
-        
         QString texturePath = QString(":/game/explosion_frame_%1.png").arg(i);
         QImage img(texturePath);
         if (img.isNull()) {
@@ -39,10 +38,10 @@ void Explosion::render() {
         glTranslatef(posX, posY, 0.0f); // Translate to the position of the explosion
 
         glBegin(GL_QUADS); // Begin drawing a quad
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(-halfWidth, -halfHeight); // Bottom-left
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(halfWidth, -halfHeight); // Bottom-right
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(halfWidth, halfHeight); // Top-right
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(-halfWidth, halfHeight); // Top-left
+            glTexCoord2f(0.0f, 0.0f); glVertex2f(-halfWidth, -halfHeight); // Bottom-left
+            glTexCoord2f(1.0f, 0.0f); glVertex2f(halfWidth, -halfHeight); // Bottom-right
+            glTexCoord2f(1.0f, 1.0f); glVertex2f(halfWidth, halfHeight); // Top-right
+            glTexCoord2f(0.0f, 1.0f); glVertex2f(-halfWidth, halfHeight); // Top-left
         glEnd(); // End drawing
 
         glPopMatrix(); // Restore the transformation matrix

@@ -14,7 +14,7 @@
         <file>explosion_frame_8.png</file>
         <file>explosion_frame_9.png</file>
         <file>defender.ttf</file>
-        <file>playerLife.png</file>
         <file>enemy.png</file>
+        <file>life.png</file>
     </qresource>
 </RCC>

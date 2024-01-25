@@ -25,10 +25,10 @@ void Spacecraft::draw() {
     }
 
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(-width / 2, -height / 2);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f(width / 2, -height / 2);
-    glTexCoord2f(1.0f, 1.0f); glVertex2f(width / 2, height / 2);
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(-width / 2, height / 2);
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(-width / 2, -height / 2);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(width / 2, -height / 2);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(width / 2, height / 2);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(-width / 2, height / 2);
     glEnd();
 
     glPopMatrix();

@@ -60,10 +60,10 @@ void GameWidget::drawBackground() {
 
     // Repeat the texture
     glBegin(GL_QUADS);
-    glTexCoord2f(backgroundOffsetX, backgroundOffsetY); glVertex2f(-GameSettings::BACKGROUND_SCALE_X, -GameSettings::BACKGROUND_SCALE_Y);
-    glTexCoord2f(backgroundOffsetX + GameSettings::BACKGROUND_SCALE_X, backgroundOffsetY); glVertex2f(GameSettings::BACKGROUND_SCALE_X, -GameSettings::BACKGROUND_SCALE_Y);
-    glTexCoord2f(backgroundOffsetX + GameSettings::BACKGROUND_SCALE_X, backgroundOffsetY + GameSettings::BACKGROUND_SCALE_Y); glVertex2f(GameSettings::BACKGROUND_SCALE_X, GameSettings::BACKGROUND_SCALE_Y);
-    glTexCoord2f(backgroundOffsetX, backgroundOffsetY + GameSettings::BACKGROUND_SCALE_Y); glVertex2f(-GameSettings::BACKGROUND_SCALE_X, GameSettings::BACKGROUND_SCALE_Y);
+        glTexCoord2f(backgroundOffsetX, backgroundOffsetY); glVertex2f(-GameSettings::BACKGROUND_SCALE_X, -GameSettings::BACKGROUND_SCALE_Y);
+        glTexCoord2f(backgroundOffsetX + GameSettings::BACKGROUND_SCALE_X, backgroundOffsetY); glVertex2f(GameSettings::BACKGROUND_SCALE_X, -GameSettings::BACKGROUND_SCALE_Y);
+        glTexCoord2f(backgroundOffsetX + GameSettings::BACKGROUND_SCALE_X, backgroundOffsetY + GameSettings::BACKGROUND_SCALE_Y); glVertex2f(GameSettings::BACKGROUND_SCALE_X, GameSettings::BACKGROUND_SCALE_Y);
+        glTexCoord2f(backgroundOffsetX, backgroundOffsetY + GameSettings::BACKGROUND_SCALE_Y); glVertex2f(-GameSettings::BACKGROUND_SCALE_X, GameSettings::BACKGROUND_SCALE_Y);
     glEnd();
 
     backgroundTexture->release();
@@ -72,18 +72,18 @@ void GameWidget::drawBackground() {
 void GameWidget::drawEnemies() {
     // Render enemy spaceships
     enemyTexture->bind();
-    float enemyshipWidth = GameSettings::SPACESHIP_SIZE;
+    float enemyshipWidth = GameSettings::ENEMY_SIZE; 
     float enemyshipHeight = enemyshipWidth / enemyAspectRatio;
     for (const auto& enemy : enemyManager.enemySpaceships) {
-        glPushMatrix();
+        glPushMatrix(); // save current matrix
         glTranslatef(enemy.x, enemy.y, 0.0f);
-        glBegin(GL_QUADS); // Begin defining a quadrilateral
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(-enemyshipWidth / 2, -enemyshipHeight / 2);    // Bottom-left corner
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(enemyshipWidth / 2, -enemyshipHeight / 2);     // Bottom-right corner
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(enemyshipWidth / 2, enemyshipHeight / 2);      // Top-right corner
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(-enemyshipWidth / 2, enemyshipHeight / 2);     // Top-left corner
-        glEnd(); // End the definition and render the textured quadrilateral
-        glPopMatrix();
+        glBegin(GL_QUADS); 
+            glTexCoord2f(0.0f, 0.0f); glVertex2f(-enemyshipWidth / 2, -enemyshipHeight / 2);    // Bottom-left corner
+            glTexCoord2f(1.0f, 0.0f); glVertex2f(enemyshipWidth / 2, -enemyshipHeight / 2);     // Bottom-right corner
+            glTexCoord2f(1.0f, 1.0f); glVertex2f(enemyshipWidth / 2, enemyshipHeight / 2);      // Top-right corner
+            glTexCoord2f(0.0f, 1.0f); glVertex2f(-enemyshipWidth / 2, enemyshipHeight / 2);     // Top-left corner
+        glEnd(); 
+        glPopMatrix(); // restor previous matrix
     }
     enemyTexture->release();
 }
@@ -94,7 +94,6 @@ void GameWidget::drawPlayerSpaceship() {
     float spaceshipWidth = GameSettings::SPACESHIP_SIZE;
     float spaceshipHeight = spaceshipWidth / spaceshipAspectRatio;
 
-
     glPushMatrix();
     glTranslatef(spaceshipX, spaceshipY, 0.0f);
     if (spaceshipDirection == GameSettings::Direction::Right) {
@@ -102,10 +101,10 @@ void GameWidget::drawPlayerSpaceship() {
     }
 
     glBegin(GL_QUADS); // Begin defining a quadrilateral
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(-spaceshipWidth / 2, -spaceshipHeight / 2);    // Bottom-left corner
-    glTexCoord2f(1.0f, 0.0f); glVertex2f(spaceshipWidth / 2, -spaceshipHeight / 2);     // Bottom-right corner
-    glTexCoord2f(1.0f, 1.0f); glVertex2f(spaceshipWidth / 2, spaceshipHeight / 2);      // Top-right corner
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(-spaceshipWidth / 2, spaceshipHeight / 2);     // Top-left corner
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(-spaceshipWidth / 2, -spaceshipHeight / 2);    // Bottom-left corner
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(spaceshipWidth / 2, -spaceshipHeight / 2);     // Bottom-right corner
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(spaceshipWidth / 2, spaceshipHeight / 2);      // Top-right corner
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(-spaceshipWidth / 2, spaceshipHeight / 2);     // Top-left corner
     glEnd(); // End the definition and render the textured quadrilateral
 
     glPopMatrix();
@@ -194,7 +193,7 @@ void GameWidget::initializeGL() {
     bulletTexture->setMinificationFilter(QOpenGLTexture::Nearest);
     bulletTexture->setMagnificationFilter(QOpenGLTexture::Linear);
     bulletTexture->setWrapMode(QOpenGLTexture::Repeat);
-  
+ 
     // Explosion
     Explosion::loadTextures(this); // Load explosion textures
 }
@@ -209,27 +208,22 @@ void GameWidget::drawLives()
     QPainter painter(this);
 
     // Draw player life icons above the score
-    int xPosition = 20; // Adjust X position for life icons
-    int yPosition = 10; // Adjust Y position to place icons above the score
+    auto xPosition = 20; // Adjust X position for life icons
+    auto yPosition = 10; // Adjust Y position to place icons above the score
+    auto iconSpacing = 10; // Adjust the spacing between icons
 
-    int playerLifeIconWidth = 60; // Adjust the width of the player life icons
-    int playerLifeIconHeight = GameSettings::LIFEICONSIZE;
+    // Draw the player life icon
+    QPixmap playerLifePixmap(":/game/life.png");
+    for (int life = 0; life < GameSettings::PLAYER_LIVES; ++life) {
 
-    for (int life = 0; life < playerLives; ++life) {
-        // Draw the player life icon
-        QPixmap playerLifePixmap(":/game/playerLife.png");
-
-        float width = playerLifePixmap.width();
-        float height = playerLifePixmap.height();
+        auto width = playerLifePixmap.width();
+        auto height = playerLifePixmap.height();
 
         // Calculate the position for each player life icon
-        int iconXPosition = xPosition + life * (width + 10); // Adjust X position for each icon
-               
-              
+        auto iconXPosition = xPosition + life * (width  + iconSpacing); // Adjust X position for each icon
+
         playerLifePixmap = playerLifePixmap.scaled(width, height, Qt::KeepAspectRatio);
         painter.drawPixmap(iconXPosition, yPosition, playerLifePixmap);
-        qDebug() << "iconXPosition: " << iconXPosition;
-        qDebug() << "yPosition: " << yPosition;
     }
 
     // Enable 2D texturing again for other OpenGL rendering
@@ -274,12 +268,12 @@ void GameWidget::paintGL() {
     // Player Spaceship is always at the center
     drawPlayerSpaceship();
     drawBullets();
-       
+
     // Render active explosions
     for (auto& explosion : activeExplosions) {
         explosion.render();
     }
-    
+
     // Draw spacecraft lives
     drawLives();
 
