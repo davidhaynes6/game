@@ -17,13 +17,15 @@ public:
     QPointF getPosition() const;
     void updatePosition(float deltaX, float deltaY);
     void setCameraPosition(QPointF& cameraPos);
+    float getWidth();
+    float getHeight();
 
 private:
     QPointF position;
     GameSettings::Direction direction;
     float aspectRatio;
     QOpenGLTexture* texture;
-    float width;      
+    float width;
     float height;
     float upperBoundary;
     float lowerBoundary;

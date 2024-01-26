@@ -8,15 +8,14 @@ Spacecraft::Spacecraft(QOpenGLTexture* texture)
 Spacecraft::~Spacecraft() {}
 
 QRectF Spacecraft::getBoundingBox() const {
-    // Assuming you have variables for the spacecraft's position, width, and height
     return QRectF(position.x() - width / 2, position.y() - height / 2, width, height);
 }
 void Spacecraft::draw() {
     if (!texture) return;
 
     texture->bind();
-    float width = GameSettings::SPACESHIP_SIZE;
-    float height = width / aspectRatio;
+    width = GameSettings::SPACESHIP_SIZE;
+    height = width / aspectRatio;
 
     glPushMatrix();
     glTranslatef(position.x(), position.y(), 0.0f);
@@ -68,4 +67,14 @@ void Spacecraft::updatePosition(float deltaX, float deltaY) {
 void Spacecraft::setCameraPosition(QPointF& cameraPos) {
     cameraPos.setX(-position.x());
     cameraPos.setY(-position.y());
+}
+
+float Spacecraft::getWidth()
+{
+    return width;
+}
+
+float Spacecraft::getHeight()
+{
+    return height;
 }

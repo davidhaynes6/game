@@ -1,5 +1,5 @@
 #pragma once
-
+#include "player.h"
 #include <vector>
 #include <cstdlib>
 
@@ -11,6 +11,8 @@ public:
     float speed; // Speed of spaceship
     float moveX; // X-direction movement
     float moveY; // Y-direction movement
+    float width;
+    float height;
 
     EnemySpaceship(float posX, float posY, float vel) : x(posX), y(posY), speed(vel), velocityX(0), velocityY(0) {}
 };
@@ -24,5 +26,6 @@ public:
     void generateRandomCoordinates(float& x, float& y);
     float generateRandomVelocity(float minVelocity, float maxVelocity);
     void update();
+    bool checkCollision(const Spacecraft& playerSpaceship);
     void handleBoundary(EnemySpaceship& enemy);
 };

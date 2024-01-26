@@ -35,12 +35,10 @@ GameWidget::GameWidget(QWidget* parent) : QOpenGLWidget(parent)
     backgroundHeight = 0;
     moveSpeedX = moveSpeedY = 0.0f;
 
-    playerLives = 3;
-
     // Create a timer for updating the game at approximately 60fps
     QTimer* timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &GameWidget::updateGame);
-    timer->start(16); // Approximately 60fps
+    timer->start(GameSettings::FRAME_TIME); 
 }
 
 GameWidget::~GameWidget() {
@@ -72,16 +70,17 @@ void GameWidget::drawBackground() {
 void GameWidget::drawEnemies() {
     // Render enemy spaceships
     enemyTexture->bind();
-    float enemyshipWidth = GameSettings::ENEMY_SIZE; 
-    float enemyshipHeight = enemyshipWidth / enemyAspectRatio;
+    float halfEnemyshipWidth = GameSettings::ENEMY_SIZE / 2; 
+    float halfEnemyshipHeight = halfEnemyshipWidth / enemyAspectRatio;
+
     for (const auto& enemy : enemyManager.enemySpaceships) {
         glPushMatrix(); // save current matrix
         glTranslatef(enemy.x, enemy.y, 0.0f);
         glBegin(GL_QUADS); 
-            glTexCoord2f(0.0f, 0.0f); glVertex2f(-enemyshipWidth / 2, -enemyshipHeight / 2);    // Bottom-left corner
-            glTexCoord2f(1.0f, 0.0f); glVertex2f(enemyshipWidth / 2, -enemyshipHeight / 2);     // Bottom-right corner
-            glTexCoord2f(1.0f, 1.0f); glVertex2f(enemyshipWidth / 2, enemyshipHeight / 2);      // Top-right corner
-            glTexCoord2f(0.0f, 1.0f); glVertex2f(-enemyshipWidth / 2, enemyshipHeight / 2);     // Top-left corner
+            glTexCoord2f(0.0f, 0.0f); glVertex2f(-halfEnemyshipWidth, -halfEnemyshipHeight);    // Bottom-left corner
+            glTexCoord2f(1.0f, 0.0f); glVertex2f(halfEnemyshipWidth, -halfEnemyshipHeight);     // Bottom-right corner
+            glTexCoord2f(1.0f, 1.0f); glVertex2f(halfEnemyshipWidth, halfEnemyshipHeight);      // Top-right corner
+            glTexCoord2f(0.0f, 1.0f); glVertex2f(-halfEnemyshipWidth, halfEnemyshipHeight);     // Top-left corner
         glEnd(); 
         glPopMatrix(); // restor previous matrix
     }
@@ -91,8 +90,8 @@ void GameWidget::drawEnemies() {
 void GameWidget::drawPlayerSpaceship() {
     // Draw spaceship
     spaceshipTexture->bind();
-    float spaceshipWidth = GameSettings::SPACESHIP_SIZE;
-    float spaceshipHeight = spaceshipWidth / spaceshipAspectRatio;
+    float halfSpaceshipWidth = GameSettings::SPACESHIP_SIZE / 2;
+    float halfSpaceshipHeight = halfSpaceshipWidth / spaceshipAspectRatio;
 
     glPushMatrix();
     glTranslatef(spaceshipX, spaceshipY, 0.0f);
@@ -101,10 +100,10 @@ void GameWidget::drawPlayerSpaceship() {
     }
 
     glBegin(GL_QUADS); // Begin defining a quadrilateral
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(-spaceshipWidth / 2, -spaceshipHeight / 2);    // Bottom-left corner
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(spaceshipWidth / 2, -spaceshipHeight / 2);     // Bottom-right corner
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(spaceshipWidth / 2, spaceshipHeight / 2);      // Top-right corner
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(-spaceshipWidth / 2, spaceshipHeight / 2);     // Top-left corner
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(-halfSpaceshipWidth, -halfSpaceshipHeight);    // Bottom-left corner
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(halfSpaceshipWidth, -halfSpaceshipHeight);     // Bottom-right corner
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(halfSpaceshipWidth, halfSpaceshipHeight);      // Top-right corner
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(-halfSpaceshipWidth, halfSpaceshipHeight);     // Top-left corner
     glEnd(); // End the definition and render the textured quadrilateral
 
     glPopMatrix();
@@ -120,14 +119,14 @@ void GameWidget::drawBullets() {
         glPushMatrix();
 
         glTranslatef(bullet.x, bullet.y, 0.0f);
-        float bulletWidth = GameSettings::BULLET_SIZE;
-        float bulletHeight = bulletWidth; // Adjust based on the texture aspect ratio
+        float halfBulletWidth = GameSettings::BULLET_SIZE / 2;
+        float halfBulletHeight = halfBulletWidth; // Adjust based on the texture aspect ratio
 
         glBegin(GL_QUADS); // Begin defining a quadrilateral
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(-bulletWidth / 2, -bulletHeight / 2);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(bulletWidth / 2, -bulletHeight / 2);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(bulletWidth / 2, bulletHeight / 2);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(-bulletWidth / 2, bulletHeight / 2);
+            glTexCoord2f(0.0f, 0.0f); glVertex2f(-halfBulletWidth, -halfBulletHeight);
+            glTexCoord2f(1.0f, 0.0f); glVertex2f(halfBulletWidth, -halfBulletHeight);
+            glTexCoord2f(1.0f, 1.0f); glVertex2f(halfBulletWidth, halfBulletHeight);
+            glTexCoord2f(0.0f, 1.0f); glVertex2f(-halfBulletWidth, halfBulletHeight);
         glEnd(); // End the definition and render the textured quadrilateral
 
         // Remove the top matrix from the current matrix stack
@@ -236,8 +235,8 @@ void GameWidget::drawScore()
     glEnable(GL_TEXTURE_2D);
 
     // Set the position for the score text (screen coordinates)
-    int xPosition = 20; // Adjust X position
-    int yPosition = 60; // Adjust Y position
+    auto xPosition = 20; // Adjust X position
+    auto yPosition = 60; // Adjust Y position
 
     // Use QPainter to draw the score text on the screen
     QPainter painter(this);
@@ -284,7 +283,6 @@ void GameWidget::paintGL() {
 }
 
 void GameWidget::keyPressEvent(QKeyEvent* event) {
-    float backgroundScrollSpeed = 0.01f; 
 
     switch (event->key()) {
     case Qt::Key_Up:
@@ -312,10 +310,10 @@ void GameWidget::keyPressEvent(QKeyEvent* event) {
 
         // Set bullet speed based on spaceship direction
         if (spaceshipDirection == GameSettings::Direction::Left) {
-            newBullet.speed = -0.01f; // Negative speed for leftward movement
+            newBullet.speed = -GameSettings::BACKGROUND_SCROLL_SPEED; // Negative speed for leftward movement
         }
         else { // spaceshipDirection == Right
-            newBullet.speed = 0.01f; // Positive speed for rightward movement
+            newBullet.speed = GameSettings::BACKGROUND_SCROLL_SPEED; // Positive speed for rightward movement
         }
 
         bullets.push_back(newBullet);
@@ -365,73 +363,21 @@ void GameWidget::updateGame() {
     spaceshipX = qBound(-GameSettings::WORLD_WIDTH / 2, spaceshipX, GameSettings::WORLD_WIDTH / 2);
     spaceshipY = qBound(-GameSettings::WORLD_HEIGHT / 2, spaceshipY, GameSettings::WORLD_HEIGHT / 2);
 
-    // Constrain the spaceship within world boundaries
-    handleSpaceshipBoundary();
-
-    // Update enemy spaceships by passing player's spaceship position
+    // Update enemy spaceships, check collision
     enemyManager.update();
 
-    // Update bullets and check boundaries
-    for (size_t i = 0; i < bullets.size();) {
-        bullets[i].x += bullets[i].speed;
-        if (bullets[i].x > GameSettings::SCREENBOUNDARY || bullets[i].x < -GameSettings::SCREENBOUNDARY) {
-            bullets.erase(bullets.begin() + i);
-        }
-        else {
-            ++i;
-        }
-    }
-
-    // Update bullets and check for collisions
-    for (size_t i = 0; i < bullets.size();) {
-        bool bulletRemoved = false;
-        bullets[i].x += bullets[i].speed;
-        //qDebug() << "Bullet position: " << bullets[i].x << ", " << bullets[i].y;
-    
-        // Check for collision with enemy spaceships
-        for (size_t j = 0; j < enemyManager.enemySpaceships.size() && !bulletRemoved;) {
-
-            if (checkCollision(bullets[i], enemyManager.enemySpaceships[j])) {
-
-                Explosion explosion(bullets[i].x, bullets[i].y);
-                activeExplosions.push_back(explosion);
-
-                // Remove bullet and enemy spaceship on collision
-                bullets.erase(bullets.begin() + i);
-                enemyManager.enemySpaceships.erase(enemyManager.enemySpaceships.begin() + j);
-                bulletRemoved = true;
-
-                // Update score
-                score += 10;
-            }
-            else {
-                ++j;
-            }
-        }
-
-        if (!bulletRemoved && (bullets[i].x > GameSettings::SCREENBOUNDARY || bullets[i].x < -GameSettings::SCREENBOUNDARY)) {
-            bullets.erase(bullets.begin() + i);
-        }
-        else if (!bulletRemoved) {
-            ++i;
-        }
-    }
+    // Update bullets, check boundaries, and check for collisions
+    updateBullets();
 
     // Update active explosions
-    for (auto& explosion : activeExplosions) {
-        explosion.render();
-    }
-
-    // Remove finished explosions
-    activeExplosions.erase(
-        std::remove_if(activeExplosions.begin(), activeExplosions.end(), [](const Explosion& e) { return e.isFinished(); }), activeExplosions.end());
+    updateExplosions();
 
     update(); // Schedule a repaint
 }
 
 bool GameWidget::checkCollision(const Bullet& bullet, const EnemySpaceship& enemy) {
     float bulletWidth = GameSettings::BULLET_SIZE;
-    float bulletHeight = bulletWidth; // Assuming square bullets
+    float bulletHeight = bulletWidth; 
 
     float enemyshipWidth = GameSettings::SPACESHIP_SIZE;
     float enemyshipHeight = enemyshipWidth / enemyAspectRatio;
@@ -444,21 +390,50 @@ bool GameWidget::checkCollision(const Bullet& bullet, const EnemySpaceship& enem
     return collision;
 }
 
-void GameWidget::handleSpaceshipBoundary() {
-    if (spaceshipX < -GameSettings::WORLD_WIDTH / 2) {
-        spaceshipX = -GameSettings::WORLD_WIDTH / 2;
-    }
-    else if (spaceshipX > GameSettings::WORLD_WIDTH / 2) {
-        spaceshipX = GameSettings::WORLD_WIDTH / 2;
-    }
+void GameWidget::updateBullets()
+{
+    for (auto bullet = bullets.begin(); bullet != bullets.end();) {
+        bool bulletRemoved = false;
+        bullet->x += bullet->speed;
 
-    if (spaceshipY < -GameSettings::WORLD_HEIGHT / 2) {
-        spaceshipY = -GameSettings::WORLD_HEIGHT / 2;
-    }
-    else if (spaceshipY > GameSettings::WORLD_HEIGHT / 2) {
-        spaceshipY = GameSettings::WORLD_HEIGHT / 2;
+        // Check for collision with enemy spaceships
+        for (auto enemy = enemyManager.enemySpaceships.begin(); enemy != enemyManager.enemySpaceships.end() && !bulletRemoved;) {
+            if (checkCollision(*bullet, *enemy)) {
+                Explosion explosion(bullet->x, bullet->y);
+                activeExplosions.push_back(explosion);
+
+                // Remove bullet and enemy spaceship on collision
+                bullet = bullets.erase(bullet);
+                enemy = enemyManager.enemySpaceships.erase(enemy);
+                bulletRemoved = true;
+
+                // Update score
+                score += 10;
+            }
+            else {
+                ++enemy;
+            }
+        }
+
+        // Check if bullet is out of screen boundaries
+        if (!bulletRemoved && (bullet->x > GameSettings::SCREENBOUNDARY || bullet->x < -GameSettings::SCREENBOUNDARY)) {
+            bullet = bullets.erase(bullet);
+        }
+        else if (!bulletRemoved) {
+            ++bullet;
+        }
     }
 }
 
+void GameWidget::updateExplosions()
+{
+    for (auto& explosion : activeExplosions) {
+        explosion.render();
+    }
+
+    // Remove finished explosions
+    activeExplosions.erase(
+        std::remove_if(activeExplosions.begin(), activeExplosions.end(), [](const Explosion& e) { return e.isFinished(); }), activeExplosions.end());
+}
 
 

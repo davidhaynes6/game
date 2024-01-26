@@ -40,10 +40,31 @@ void EnemyManager::update() {
         enemy.x += enemy.velocityX;
         enemy.y += enemy.velocityY;
 
-        handleBoundary(enemy);
+        enemy.x = qBound(-GameSettings::WORLD_WIDTH / 2, enemy.x, GameSettings::WORLD_WIDTH / 2);
+        enemy.y = qBound(-GameSettings::WORLD_HEIGHT / 2, enemy.y, GameSettings::WORLD_HEIGHT / 2);
+
+        //handleBoundary(enemy);
 
         qDebug() << "Enemy position: " << enemy.x << ", " << enemy.y;
     }
+}
+
+bool EnemyManager::checkCollision(const Spacecraft& playerSpaceship) {
+
+    QRectF playerRect = playerSpaceship.getBoundingBox();
+
+    for (const auto& enemy : enemySpaceships) {
+        float enemyWidth = GameSettings::ENEMY_SIZE;
+        float enemyHeight = enemyWidth / enemyAspectRatio; // Assume enemyAspectRatio is defined
+
+        QRectF enemyRect(enemy.x - enemyWidth / 2, enemy.y - enemyHeight / 2, enemyWidth, enemyHeight);
+
+        if (playerRect.intersects(enemyRect)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void EnemyManager::handleBoundary(EnemySpaceship& enemy) {

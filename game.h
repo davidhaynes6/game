@@ -45,7 +45,8 @@ protected:
     void keyReleaseEvent(QKeyEvent* event) override;
     void updateGame();
     bool checkCollision(const Bullet& bullet, const EnemySpaceship& enemy);
-    void handleSpaceshipBoundary();
+    void updateBullets();
+    void updateExplosions();
 
 private:
     std::unique_ptr<QOpenGLTexture> playerLifeTexture = nullptr;

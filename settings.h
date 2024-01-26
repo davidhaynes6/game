@@ -5,12 +5,15 @@ public:
     static constexpr float WORLD_HEIGHT = 2.0f;
     static constexpr float BACKGROUND_SCALE_X = 2.0f;
     static constexpr float BACKGROUND_SCALE_Y = 2.0f;
+    static constexpr float BACKGROUND_SCROLL_SPEED = 0.01f;
+    static constexpr float SCROLL_FACTOR_X = 0.005f;
+    static constexpr float SCROLL_FACTOR_Y = 0.005f;
+
     static constexpr float GAME_LEFT_BOUNDARY = -1.0f;
     static constexpr float GAME_RIGHT_BOUNDARY = 1.0f;
     static constexpr float GAME_TOP_BOUNDARY = 1.0f;
     static constexpr float GAME_BOTTOM_BOUNDARY = -1.0f;
-    static constexpr float SCROLL_FACTOR_X = 0.005f;
-    static constexpr float SCROLL_FACTOR_Y = 0.005f;
+
     static constexpr float ACCELERATION = 0.01f;
     static constexpr float MOMENTUM_DECREASE = 0.995f;
     static constexpr float SPACESHIP_SIZE = 0.1f;
@@ -24,7 +27,7 @@ public:
     static constexpr int   X_OFFSET = 10;               // Adjust the horizontal offset
     static constexpr int   Y_OFFSET = 10;               // Adjust the vertical offset
     static constexpr int   PLAYER_LIVES = 3;
-    static constexpr int   FRAME_TIME = 16;
+    static constexpr int   FRAME_TIME = 16;             // 60 fps (1 second / 60 fps ~ 16.67 ms)
 
     enum Direction { Left, Right, Up, Down };
 
